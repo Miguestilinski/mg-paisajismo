@@ -83,11 +83,27 @@
                 <!-- Contenedor Dinámico -->
                 <div id="items-container" class="mb-10 space-y-8"></div>
 
-                <!-- Botonera Añadir Categorías -->
-                <div class="flex flex-wrap gap-2 mb-12 print:hidden border-t border-zinc-200 pt-4">
-                    <button class="bg-zinc-100 hover:bg-zinc-200 text-zinc-700 px-3 py-1.5 rounded text-sm font-medium border border-zinc-200 transition-colors">+ Prep. Terreno</button>
-                    <button class="bg-zinc-100 hover:bg-zinc-200 text-zinc-700 px-3 py-1.5 rounded text-sm font-medium border border-zinc-200 transition-colors">+ Plantas</button>
-                    <button class="bg-zinc-100 hover:bg-zinc-200 text-zinc-700 px-3 py-1.5 rounded text-sm font-medium border border-zinc-200 transition-colors">+ Equipamiento / Mobiliario</button>
+                <!-- Botonera Añadir Items (Menú Desplegable) -->
+                <div class="relative mb-12 print:hidden border-t border-zinc-200 pt-6" id="contenedor-dropdown">
+                    <button id="btn-toggle-cat" class="bg-zinc-900 hover:bg-zinc-800 text-white px-5 py-2.5 rounded-lg font-semibold transition-colors flex items-center gap-2 shadow-md">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                        Añadir Item
+                    </button>
+                    
+                    <!-- Dropdown Oculto -->
+                    <div id="dropdown-cat" class="hidden absolute top-full left-0 mt-2 w-80 bg-white border border-zinc-200 rounded-xl shadow-xl z-50 overflow-hidden">
+                        <div class="p-2 flex flex-col gap-1">
+                            <button class="opcion-cat text-left px-3 py-2 text-sm text-zinc-700 hover:bg-zinc-100 rounded-md font-medium transition-colors" data-nombre="Preparación terreno">Preparación terreno</button>
+                            <button class="opcion-cat text-left px-3 py-2 text-sm text-zinc-700 hover:bg-zinc-100 rounded-md font-medium transition-colors" data-nombre="Plantas">Plantas</button>
+                            <button class="opcion-cat text-left px-3 py-2 text-sm text-zinc-700 hover:bg-zinc-100 rounded-md font-medium transition-colors" data-nombre="Césped / Riego">Césped / Riego</button>
+                            <button class="opcion-cat text-left px-3 py-2 text-sm text-zinc-700 hover:bg-zinc-100 rounded-md font-medium transition-colors" data-nombre="Pavimentos / Solerillas">Pavimentos / Solerillas</button>
+                            <button class="opcion-cat text-left px-3 py-2 text-sm text-zinc-700 hover:bg-zinc-100 rounded-md font-medium transition-colors" data-nombre="Equipamiento y Mobiliario">Equipamiento y Mobiliario</button>
+                        </div>
+                        <div class="border-t border-zinc-200 p-3 bg-zinc-50 flex gap-2">
+                            <input type="text" id="input-cat-personalizada" class="w-full border border-zinc-300 rounded-md p-2 text-sm focus:ring-1 focus:ring-zinc-900 focus:border-zinc-900 bg-white" placeholder="Otro Item...">
+                            <button id="btn-add-cat-personalizada" class="bg-zinc-200 hover:bg-zinc-300 text-zinc-800 px-3 py-2 rounded-md text-sm font-bold transition-colors">Añadir</button>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- Liquidación Final -->
