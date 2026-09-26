@@ -13,162 +13,54 @@
 </head>
 <body>
     
-    <div id="app" class="min-h-screen bg-gray-50 text-gray-800 font-sans">
+    <div id="app" class="min-h-screen text-gray-800 font-sans bg-cover bg-center bg-fixed" style="background-image: url('./assets/alexandra-nosova-kly-z2c54b0-unsplash.jpg');">
         
-        <!-- ================= VISTA 1: DASHBOARD ================= -->
-        <div id="dashboard-view" class="max-w-5xl mx-auto py-10 px-6 print:hidden">
-            <header class="flex justify-between items-center mb-10">
-                <div>
-                    <h1 class="text-4xl font-bold text-gray-900">Hola, Moni</h1>
-                    <p class="text-gray-600 text-lg mt-2">Aquí están tus presupuestos recientes.</p>
-                </div>
-                <button id="btn-nuevo-presupuesto" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg shadow transition-colors text-lg">
-                    + Nuevo Presupuesto
-                </button>
-            </header>
+        <!-- Overlay de cristal para legibilidad -->
+        <div class="min-h-screen bg-black/10 backdrop-blur-sm py-12 px-6">
+            <div class="max-w-5xl mx-auto bg-white/85 backdrop-blur-md rounded-2xl shadow-2xl p-8 border border-white/40 print:hidden">
+                <header class="flex justify-between items-center mb-10">
+                    <div class="flex items-center gap-6">
+                        <img src="./assets/Logo MG Paisajismo.png" alt="MG Paisajismo" class="h-20 object-contain">
+                        <div>
+                            <h1 class="text-4xl font-bold text-zinc-900 tracking-tight">Hola, Moni</h1>
+                            <p class="text-zinc-600 text-lg mt-1 font-medium">Tus presupuestos recientes.</p>
+                        </div>
+                    </div>
+                    <button id="btn-nuevo-presupuesto" class="bg-zinc-900 hover:bg-zinc-800 text-white font-semibold py-3 px-6 rounded-xl shadow-lg transition-all hover:shadow-xl hover:-translate-y-0.5 flex items-center gap-2 text-lg">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                        Nuevo Presupuesto
+                    </button>
+                </header>
 
-            <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-                <table class="w-full text-left border-collapse">
-                    <thead>
-                        <tr class="bg-gray-100 text-gray-600 uppercase text-sm tracking-wider">
-                            <th class="p-4 border-b">Fecha</th>
-                            <th class="p-4 border-b">Proyecto / Constructora</th>
-                            <th class="p-4 border-b">Total Neto</th>
-                            <th class="p-4 border-b text-right">Acción</th>
-                        </tr>
-                    </thead>
-                    <tbody id="lista-presupuestos">
-                        <!-- Los presupuestos guardados se inyectarán aquí desde IndexedDB/Firestore -->
-                        <tr class="hover:bg-gray-50 transition-colors">
-                            <td class="p-4 border-b text-gray-500">30 Jun 2026</td>
-                            <td class="p-4 border-b font-medium text-gray-900">Edificio Rivas Vicuña <br><span class="text-sm text-gray-500 font-normal">Constructora Ingevec</span></td>
-                            <td class="p-4 border-b font-semibold">$93.967.498</td>
-                            <td class="p-4 border-b text-right">
-                                <button class="text-blue-600 hover:text-blue-800 font-medium">Abrir</button>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
+                <div class="bg-white/90 rounded-xl shadow-sm border border-zinc-200/50 overflow-hidden">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-zinc-100/80 text-zinc-600 uppercase text-xs font-bold tracking-wider">
+                                <th class="p-5 border-b border-zinc-200">Fecha</th>
+                                <th class="p-5 border-b border-zinc-200">Proyecto / Constructora</th>
+                                <th class="p-5 border-b border-zinc-200">Total Neto</th>
+                                <th class="p-5 border-b border-zinc-200 text-right">Acción</th>
+                            </tr>
+                        </thead>
+                        <tbody id="lista-presupuestos">
+                            <tr class="hover:bg-zinc-50/80 transition-colors group">
+                                <td class="p-5 border-b border-zinc-100 text-zinc-500 text-sm">30 Jun 2026</td>
+                                <td class="p-5 border-b border-zinc-100 font-medium text-zinc-900">
+                                    Edificio Rivas Vicuña <br>
+                                    <span class="text-sm text-zinc-500 font-normal">Constructora Ingevec</span>
+                                </td>
+                                <td class="p-5 border-b border-zinc-100 font-bold text-zinc-800">$93.967.498</td>
+                                <td class="p-5 border-b border-zinc-100 text-right">
+                                    <button class="text-zinc-500 group-hover:text-zinc-900 font-semibold transition-colors flex items-center justify-end w-full gap-1">
+                                        Abrir
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                                    </button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
             </div>
-        </div>
-
-        <!-- ================= VISTA 2: EDITOR DE PRESUPUESTO ================= -->
-        <div id="editor-view" class="hidden flex h-screen overflow-hidden bg-gray-100">
-            
-            <!-- Panel Principal (Documento) -->
-            <main class="flex-1 overflow-y-auto p-8 print:p-0 print:bg-white print:overflow-visible">
-                
-                <!-- Barra de Herramientas Superior (No se imprime) -->
-                <div class="flex justify-between items-center mb-6 bg-white p-4 rounded-lg shadow-sm border border-gray-200 print:hidden">
-                    <button id="btn-volver-dashboard" class="text-gray-600 hover:text-gray-900 font-medium flex items-center">
-                        <span class="mr-2">←</span> Volver al inicio
-                    </button>
-                    <div class="flex gap-4">
-                        <button id="btn-pegar-riego" class="bg-green-100 text-green-700 hover:bg-green-200 font-semibold py-2 px-4 rounded transition-colors">
-                            🌿 Importar Riego
-                        </button>
-                        <button id="btn-imprimir" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-6 rounded transition-colors shadow">
-                            Imprimir / Generar PDF
-                        </button>
-                    </div>
-                </div>
-
-                <!-- LA HOJA DEL PRESUPUESTO (Lo que se imprime) -->
-                <div id="hoja-presupuesto" class="bg-white max-w-4xl mx-auto shadow-md border border-gray-300 p-12 min-h-[1056px] print:shadow-none print:border-none print:p-0 print:max-w-full">
-                    
-                    <!-- Encabezado Fijo MG Paisajismo -->
-                    <header class="flex justify-between items-start mb-8 border-b-2 border-black pb-4">
-                        <div>
-                            <!-- Placeholder Logo -->
-                            <div class="w-48 h-24 bg-gray-200 flex items-center justify-center font-bold text-gray-400 mb-2 print:border">LOGO MG PAISAJISMO</div>
-                            <h2 class="text-xl font-bold uppercase tracking-wide">Monica Gübeli Paisajista</h2>
-                        </div>
-                        <div class="text-right text-sm text-gray-700">
-                            <p>Fonos 222142612 - 992225042</p>
-                            <p>Camino del Valle Alto N° 1589, Las Condes</p>
-                        </div>
-                    </header>
-
-                    <!-- Datos del Cliente -->
-                    <section class="mb-8 grid grid-cols-2 gap-4">
-                        <div>
-                            <input type="text" id="fecha-input" class="w-full border-0 border-b border-gray-300 focus:ring-0 focus:border-blue-500 p-1 text-sm font-medium mb-4" placeholder="Santiago, 30 de Junio 2026">
-                            
-                            <p>Señor/a</p>
-                            <input type="text" id="destinatario-input" class="w-full font-bold text-lg border-0 border-b border-gray-300 focus:ring-0 p-1 mt-1" placeholder="Nombre Destinatario">
-                            <input type="text" id="constructora-input" class="w-full border-0 border-b border-gray-300 focus:ring-0 p-1 mt-1 font-semibold" placeholder="Constructora / Empresa">
-                            <p class="mt-1">Presente.</p>
-                        </div>
-                    </section>
-
-                    <!-- Carta de Introducción -->
-                    <section class="mb-10">
-                        <p class="font-medium">Estimado/a <span id="saludo-nombre" class="text-blue-600 print:text-black">[Nombre]</span>:</p>
-                        <textarea id="intro-texto" class="w-full mt-2 h-24 border border-gray-200 p-2 rounded focus:ring-2 focus:ring-blue-500 print:border-0 print:p-0 resize-none" placeholder="Según lo solicitado por Uds., referente al presupuesto..."></textarea>
-                    </section>
-
-                    <!-- Título Central -->
-                    <div class="text-center font-bold text-lg uppercase mb-6 underline">
-                        PRESUPUESTO DEL PAISAJISMO Y RIEGO <br>
-                        <input type="text" id="proyecto-input" class="text-center w-full border-0 border-b border-gray-300 focus:ring-0 p-1 mt-2" placeholder="NOMBRE DEL PROYECTO">
-                    </div>
-
-                    <!-- Contenedor Dinámico de Ítems -->
-                    <div id="items-container" class="mb-10 space-y-8">
-                        <!-- Los bloques como "1. PREPARACIÓN TERRENO" se generarán aquí mediante JS -->
-                    </div>
-
-                    <!-- Botonera Añadir Categorías (No se imprime) -->
-                    <div class="flex flex-wrap gap-2 mb-12 print:hidden border-t pt-4">
-                        <button class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-1 rounded text-sm font-medium">+ Prep. Terreno</button>
-                        <button class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-1 rounded text-sm font-medium">+ Plantas</button>
-                        <button class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-1 rounded text-sm font-medium">+ Equipamiento / Mobiliario</button>
-                        <button class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-1 rounded text-sm font-medium">+ Pavimentos</button>
-                    </div>
-
-                    <!-- Liquidación Final -->
-                    <div class="flex justify-end mt-12">
-                        <div class="w-1/2">
-                            <div class="flex justify-between py-2 border-b">
-                                <span class="font-bold">Costo Directo Total:</span>
-                                <span id="lbl-costo-directo" class="font-bold text-lg">$0</span>
-                            </div>
-                            <div class="flex justify-between py-2 border-b">
-                                <span class="text-gray-600">Gastos Generales (10%):</span>
-                                <span id="lbl-gastos-generales">$0</span>
-                            </div>
-                            <div class="flex justify-between py-2 border-b items-center relative group">
-                                <span class="text-gray-600">Utilidad:</span>
-                                <input type="number" id="input-utilidad" class="text-right border border-gray-300 rounded p-1 w-32 focus:ring-2 focus:ring-blue-500 print:border-0 print:p-0" placeholder="0">
-                                <!-- Tooltip Sugerencia Moni -->
-                                <div class="absolute -left-32 top-2 hidden group-hover:block print:hidden bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded">
-                                    Sugerido (10%): <span id="lbl-sugerencia-utilidad">$0</span>
-                                </div>
-                            </div>
-                            <div class="flex justify-between py-3 border-b-2 border-black mt-2">
-                                <span class="font-extrabold text-xl">TOTAL NETO:</span>
-                                <span id="lbl-total-neto" class="font-extrabold text-xl">$0</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </main>
-
-            <!-- Panel Lateral Derecho: El "Río de Versiones" (No se imprime) -->
-            <aside class="w-80 border-l bg-white flex flex-col print:hidden shadow-[-4px_0_15px_-3px_rgba(0,0,0,0.05)] z-10">
-                <div class="p-4 border-b bg-gray-50 flex justify-between items-center">
-                    <h3 class="font-bold text-gray-700 uppercase tracking-wider text-sm">Historial de Cambios</h3>
-                    <button id="btn-guardar-version" class="bg-blue-100 text-blue-700 px-3 py-1 rounded-full text-xs font-bold hover:bg-blue-200">
-                        Guardar Punto
-                    </button>
-                </div>
-                <div class="flex-1 overflow-y-auto p-4 relative" id="rio-versiones">
-                    <!-- Línea del Río -->
-                    <div class="absolute left-8 top-0 bottom-0 w-0.5 bg-gray-200"></div>
-                    
-                    <!-- Nodos inyectados por JS -->
-                </div>
-            </aside>
         </div>
     </div>
 

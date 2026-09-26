@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Editor - MG Paisajismo</title>
+    <link href="./styles/output.css" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+    </style>
+</head>
+<body class="bg-cover bg-center bg-fixed text-zinc-900" style="background-image: url('./assets/alexandra-nosova-kly-z2c54b0-unsplash.jpg');">
+    
+    <div class="flex h-screen overflow-hidden bg-black/10 backdrop-blur-md">
+        
+        <!-- Panel Principal (Contiene herramientas y hoja) -->
+        <main class="flex-1 overflow-y-auto p-8 print:p-0 print:bg-white print:overflow-visible">
+            
+            <!-- Barra de Herramientas -->
+            <div class="flex justify-between items-center mb-6 bg-white/85 backdrop-blur-md p-4 rounded-xl shadow-lg border border-white/40 print:hidden sticky top-0 z-20">
+                <a href="index.html" class="text-zinc-600 hover:text-zinc-900 font-medium flex items-center gap-2 transition-colors">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+                    Volver al inicio
+                </a>
+                <div class="flex gap-4">
+                    <button id="btn-pegar-riego" class="bg-zinc-100 text-zinc-800 hover:bg-zinc-200 border border-zinc-300 font-semibold py-2 px-4 rounded-lg transition-colors flex items-center gap-2">
+                        <svg class="w-5 h-5 text-zinc-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 2.69l5.66 5.66a8 8 0 11-11.31 0z"></path></svg>
+                        Importar Riego
+                    </button>
+                    <button id="btn-imprimir" class="bg-zinc-900 hover:bg-zinc-800 text-white font-semibold py-2 px-6 rounded-lg transition-colors shadow flex items-center gap-2">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
+                        Generar PDF
+                    </button>
+                </div>
+            </div>
+
+            <!-- HOJA DEL PRESUPUESTO -->
+            <div id="hoja-presupuesto" class="bg-white max-w-4xl mx-auto shadow-2xl p-12 min-h-[1056px] print:shadow-none print:p-0 print:max-w-full">
+                
+                <!-- Encabezado MG Paisajismo -->
+                <header class="flex justify-between items-start mb-8 border-b-2 border-zinc-900 pb-4">
+                    <div>
+                        <img src="./assets/Logo MG Paisajismo.png" alt="MG Paisajismo" class="h-24 object-contain">
+                    </div>
+                    <div class="text-right text-sm text-zinc-700 font-medium pt-2">
+                        <p>Fonos 222142612 - 992225042</p>
+                        <p>Camino del Valle Alto N° 1589, Las Condes</p>
+                    </div>
+                </header>
+
+                <section class="mb-8 grid grid-cols-2 gap-4">
+                    <div>
+                        <input type="text" id="fecha-input" class="w-full border-0 border-b border-zinc-300 focus:ring-0 focus:border-zinc-900 p-1 text-sm font-medium mb-4" placeholder="Santiago, ...">
+                        <p>Señor/a</p>
+                        <input type="text" id="destinatario-input" class="w-full font-bold text-lg border-0 border-b border-zinc-300 focus:ring-0 p-1 mt-1" placeholder="Nombre Destinatario">
+                        <input type="text" id="constructora-input" class="w-full border-0 border-b border-zinc-300 focus:ring-0 p-1 mt-1 font-semibold" placeholder="Constructora / Empresa">
+                        <p class="mt-1">Presente.</p>
+                    </div>
+                </section>
+
+                <section class="mb-10">
+                    <p class="font-medium">Estimado/a <span id="saludo-nombre" class="font-bold print:font-normal">[Nombre]</span>:</p>
+                    <textarea id="intro-texto" class="w-full mt-2 h-24 border border-zinc-200 p-2 rounded focus:ring-1 focus:ring-zinc-900 print:border-0 print:p-0 resize-none" placeholder="Según lo solicitado por Uds..."></textarea>
+                </section>
+
+                <div class="text-center font-bold text-lg uppercase mb-6 underline">
+                    PRESUPUESTO DEL PAISAJISMO Y RIEGO <br>
+                    <input type="text" id="proyecto-input" class="text-center w-full border-0 border-b border-zinc-300 focus:ring-0 p-1 mt-2 font-bold" placeholder="NOMBRE DEL PROYECTO">
+                </div>
+
+                <!-- Contenedor Dinámico -->
+                <div id="items-container" class="mb-10 space-y-8"></div>
+
+                <!-- Botonera Añadir Categorías -->
+                <div class="flex flex-wrap gap-2 mb-12 print:hidden border-t border-zinc-200 pt-4">
+                    <button class="bg-zinc-100 hover:bg-zinc-200 text-zinc-700 px-3 py-1.5 rounded text-sm font-medium border border-zinc-200 transition-colors">+ Prep. Terreno</button>
+                    <button class="bg-zinc-100 hover:bg-zinc-200 text-zinc-700 px-3 py-1.5 rounded text-sm font-medium border border-zinc-200 transition-colors">+ Plantas</button>
+                    <button class="bg-zinc-100 hover:bg-zinc-200 text-zinc-700 px-3 py-1.5 rounded text-sm font-medium border border-zinc-200 transition-colors">+ Equipamiento / Mobiliario</button>
+                </div>
+
+                <!-- Liquidación Final -->
+                <div class="flex justify-end mt-12">
+                    <div class="w-1/2">
+                        <div class="flex justify-between py-2 border-b border-zinc-200">
+                            <span class="font-bold">Costo Directo Total:</span>
+                            <span id="lbl-costo-directo" class="font-bold text-lg">$0</span>
+                        </div>
+                        <div class="flex justify-between py-2 border-b border-zinc-200">
+                            <span class="text-zinc-600">Gastos Generales (10%):</span>
+                            <span id="lbl-gastos-generales">$0</span>
+                        </div>
+                        <div class="flex justify-between py-2 border-b border-zinc-200 items-center relative group">
+                            <span class="text-zinc-600">Utilidad:</span>
+                            <input type="number" id="input-utilidad" class="text-right border border-zinc-300 rounded p-1 w-32 focus:ring-1 focus:ring-zinc-900 print:border-0 print:p-0 font-medium" placeholder="0">
+                            <div class="absolute -left-36 top-2 hidden group-hover:block print:hidden bg-zinc-800 text-zinc-100 text-xs px-2 py-1 rounded shadow-md">
+                                Sugerido (10%): <span id="lbl-sugerencia-utilidad">$0</span>
+                            </div>
+                        </div>
+                        <div class="flex justify-between py-3 border-b-2 border-zinc-900 mt-2">
+                            <span class="font-extrabold text-xl">TOTAL NETO:</span>
+                            <span id="lbl-total-neto" class="font-extrabold text-xl">$0</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- Río de Versiones Lateral -->
+        <aside class="w-80 border-l border-white/40 bg-white/85 backdrop-blur-md flex flex-col print:hidden shadow-2xl z-10">
+            <div class="p-4 border-b border-zinc-200 flex justify-between items-center bg-white/50">
+                <h3 class="font-bold text-zinc-800 uppercase tracking-wider text-sm flex items-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    Historial
+                </h3>
+                <button id="btn-guardar-version" class="bg-zinc-200 text-zinc-800 px-3 py-1 rounded-full text-xs font-bold hover:bg-zinc-300 transition-colors">
+                    Guardar Punto
+                </button>
+            </div>
+            <div class="flex-1 overflow-y-auto p-4 relative" id="rio-versiones">
+                <div class="absolute left-8 top-0 bottom-0 w-0.5 bg-zinc-200"></div>
+            </div>
+        </aside>
+    </div>
+
+    <script src="https://unpkg.com/dexie/dist/dexie.js"></script>
+    <script type="module" src="./scripts/firebase-config.js"></script>
+    <script type="module" src="./scripts/versions.js"></script>
+    <script type="module" src="./scripts/db.js"></script>
+    <script type="module" src="./scripts/editor.js"></script>
+</body>
+</html>

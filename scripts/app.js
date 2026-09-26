@@ -2,27 +2,10 @@ import { db as nubeDB } from './firebase-config.js';
 import { localDB } from './db.js';
 
 document.addEventListener('DOMContentLoaded', () => {
-    // Referencias de Vistas
-    const dashboardView = document.getElementById('dashboard-view');
-    const editorView = document.getElementById('editor-view');
-    
-    // Referencias Botones Navegación
     const btnNuevo = document.getElementById('btn-nuevo-presupuesto');
-    
-    // Variable para saber qué presupuesto estamos editando
-    let presupuestoActualId = null;
-    const btnVolver = document.getElementById('btn-volver-dashboard');
-    const btnImprimir = document.getElementById('btn-imprimir');
-    
-    // Referencias Formulario Header
-    const inputDestinatario = document.getElementById('destinatario-input');
-    const lblSaludoNombre = document.getElementById('saludo-nombre');
 
-    // === NAVEGACIÓN ===
-    
     btnNuevo.addEventListener('click', async () => {
-        // 1. Generamos un ID único y la estructura base
-        presupuestoActualId = `presupuesto_${Date.now()}`;
+        const presupuestoActualId = `presupuesto_${Date.now()}`;
         const nuevoPresupuesto = {
             id: presupuestoActualId,
             codigoProyecto: "Nuevo Proyecto",
@@ -35,15 +18,11 @@ document.addEventListener('DOMContentLoaded', () => {
             historialVersiones: []
         };
 
-        // 2. Guardamos silenciosamente en la base local (Dexie)
+        // Guardamos en la base local (Dexie)
         await localDB.presupuestos.put(nuevoPresupuesto);
         
-        // 3. Preparamos la interfaz visual
-        resetearEditor();
-        dashboardView.classList.add('hidden');
-        editorView.classList.remove('hidden');
-        
-        console.log("Presupuesto creado localmente:", nuevoPresupuesto.id);
+        // Redirigir a la página del editor pasando el ID
+        window.location.href = `editor.html?id=${presupuestoActualId}`;
     });
 
     btnVolver.addEventListener('click', () => {
