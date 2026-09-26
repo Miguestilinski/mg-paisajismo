@@ -35,6 +35,20 @@ document.addEventListener('DOMContentLoaded', async () => {
         window.print();
     });
 
+    // 4. Auto-ajuste de altura para el área de texto (Carta)
+    const textareaIntro = document.getElementById('intro-texto');
+    
+    function autoResizeTextarea() {
+        this.style.height = 'auto'; // Resetea la altura para calcularla de nuevo
+        this.style.height = this.scrollHeight + 'px'; // Ajusta al contenido real
+    }
+    
+    // Escuchar cada vez que escribe
+    textareaIntro.addEventListener('input', autoResizeTextarea);
+    
+    // Ajustar una vez al cargar por si el texto inicial es largo
+    setTimeout(() => autoResizeTextarea.call(textareaIntro), 0);
+
     // Delegación de eventos para inputs numéricos (Autoguardado al soltar la tecla)
     const hojaPresupuesto = document.getElementById('hoja-presupuesto');
     hojaPresupuesto.addEventListener('input', (e) => {

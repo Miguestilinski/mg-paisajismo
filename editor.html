@@ -50,23 +50,34 @@
                 </header>
 
                 <section class="mb-8 grid grid-cols-2 gap-4">
-                    <div>
-                        <input type="text" id="fecha-input" class="w-full border-0 border-b border-zinc-300 focus:ring-0 focus:border-zinc-900 p-1 text-sm font-medium mb-4" placeholder="Santiago, ...">
-                        <p>Señor/a</p>
-                        <input type="text" id="destinatario-input" class="w-full font-bold text-lg border-0 border-b border-zinc-300 focus:ring-0 p-1 mt-1" placeholder="Nombre Destinatario">
-                        <input type="text" id="constructora-input" class="w-full border-0 border-b border-zinc-300 focus:ring-0 p-1 mt-1 font-semibold" placeholder="Constructora / Empresa">
-                        <p class="mt-1">Presente.</p>
+                    <div class="space-y-3">
+                        <input type="text" id="fecha-input" class="w-full border border-zinc-300 bg-zinc-50 hover:bg-zinc-100 focus:bg-white focus:border-zinc-900 focus:ring-1 focus:ring-zinc-900 rounded-md p-2 text-sm font-medium transition-colors print:border-0 print:bg-transparent print:p-0" placeholder="Santiago, ...">
+                        
+                        <div>
+                            <p class="text-zinc-700 font-medium mb-1">Señor/a</p>
+                            <input type="text" id="destinatario-input" class="w-full border border-zinc-300 bg-zinc-50 hover:bg-zinc-100 focus:bg-white focus:border-zinc-900 focus:ring-1 focus:ring-zinc-900 rounded-md p-2 font-bold text-lg transition-colors print:border-0 print:bg-transparent print:p-0" placeholder="Nombre Destinatario">
+                        </div>
+                        
+                        <input type="text" id="constructora-input" class="w-full border border-zinc-300 bg-zinc-50 hover:bg-zinc-100 focus:bg-white focus:border-zinc-900 focus:ring-1 focus:ring-zinc-900 rounded-md p-2 font-semibold transition-colors print:border-0 print:bg-transparent print:p-0" placeholder="Constructora / Empresa">
+                        <p class="text-zinc-700 font-medium pt-1">Presente.</p>
                     </div>
                 </section>
 
                 <section class="mb-10">
-                    <p class="font-medium">Estimado/a <span id="saludo-nombre" class="font-bold print:font-normal">[Nombre]</span>:</p>
-                    <textarea id="intro-texto" class="w-full mt-2 h-24 border border-zinc-200 p-2 rounded focus:ring-1 focus:ring-zinc-900 print:border-0 print:p-0 resize-none" placeholder="Según lo solicitado por Uds..."></textarea>
+                    <p class="font-medium text-zinc-800 mb-2">Estimado/a <span id="saludo-nombre" class="font-bold print:font-normal">[Nombre]</span>:</p>
+                    
+                    <textarea id="intro-texto" class="w-full min-h-[120px] border border-zinc-300 bg-zinc-50 hover:bg-zinc-100 focus:bg-white focus:border-zinc-900 focus:ring-2 focus:ring-zinc-900 rounded-md p-3 transition-colors resize-none overflow-hidden print:border-0 print:bg-transparent print:p-0" placeholder="Según lo solicitado por Uds..."></textarea>
+                    
+                    <!-- Firma estática de MG Paisajismo -->
+                    <div class="mt-6 font-bold text-zinc-900">
+                        <p>MONICA GÜBELI LOIS</p>
+                        <p>PAISAJISTA</p>
+                    </div>
                 </section>
 
                 <div class="text-center font-bold text-lg uppercase mb-6 underline">
                     PRESUPUESTO DEL PAISAJISMO Y RIEGO <br>
-                    <input type="text" id="proyecto-input" class="text-center w-full border-0 border-b border-zinc-300 focus:ring-0 p-1 mt-2 font-bold" placeholder="NOMBRE DEL PROYECTO">
+                    <input type="text" id="proyecto-input" class="text-center w-full max-w-md mx-auto border border-zinc-300 bg-zinc-50 hover:bg-zinc-100 focus:bg-white focus:border-zinc-900 focus:ring-1 focus:ring-zinc-900 rounded-md p-2 mt-4 font-bold transition-colors print:border-0 print:bg-transparent print:p-0 print:mt-1" placeholder="NOMBRE DEL PROYECTO">
                 </div>
 
                 <!-- Contenedor Dinámico -->
@@ -92,7 +103,7 @@
                         </div>
                         <div class="flex justify-between py-2 border-b border-zinc-200 items-center relative group">
                             <span class="text-zinc-600">Utilidad:</span>
-                            <input type="number" id="input-utilidad" class="text-right border border-zinc-300 rounded p-1 w-32 focus:ring-1 focus:ring-zinc-900 print:border-0 print:p-0 font-medium" placeholder="0">
+                            <input type="number" id="input-utilidad" class="text-right border border-zinc-300 bg-zinc-50 hover:bg-zinc-100 focus:bg-white focus:border-zinc-900 focus:ring-1 focus:ring-zinc-900 rounded-md p-2 w-36 font-bold transition-colors print:border-0 print:bg-transparent print:p-0" placeholder="0">
                             <div class="absolute -left-36 top-2 hidden group-hover:block print:hidden bg-zinc-800 text-zinc-100 text-xs px-2 py-1 rounded shadow-md">
                                 Sugerido (10%): <span id="lbl-sugerencia-utilidad">$0</span>
                             </div>
