@@ -17,42 +17,65 @@ document.addEventListener('DOMContentLoaded', async () => {
     const txtFechaImpresa = document.getElementById('fecha-impresa');
     const btnFechaHoy = document.getElementById('btn-fecha-hoy');
 
-    // 1. Cargar datos del presupuesto
-    const presupuestoActual = await localDB.presupuestos.get(id);
-    
-    if (presupuestoActual) {
-        // Formulario inicial: Cargar fecha o poner la de hoy si está vacío
-        // Nota: pData se define abajo, pero cargamos el input directamente por ahora
-        if (!presupuestoActual.cliente?.fecha) {
-            setFechaHoy();
-        } else {
-            inputFecha.value = presupuestoActual.cliente.fecha;
-            actualizarFechaImpresa();
+    // ==========================================
+    // ESTADO GLOBAL EN MEMORIA
+    // ==========================================
+    let pData = await localDB.presupuestos.get(id) || {};
+    if (!pData.items) pData.items = [];
+    if (!pData.cliente) pData.cliente = {};
+
+    // 1. Lógica de Fechas (Flatpickr - Estilo Airbnb)
+    const fp = flatpickr(inputFecha, {
+        locale: "es",
+        dateFormat: "Y-m-d",
+        altInput: true,
+        altFormat: "d \\de F \\de Y", // Muestra: "26 de Septiembre de 2026"
+        allowInput: false,
+        onChange: function(selectedDates, dateStr, instance) {
+            pData.cliente.fecha = dateStr;
+            actualizarFechaImpresa(dateStr);
+            localDB.presupuestos.put(pData);
+        }
+    });
+
+    function setFechaHoy(conAnimacion = false) {
+        const hoy = new Date();
+        fp.setDate(hoy, true); // "true" dispara el guardado automático
+        
+        if (conAnimacion) {
+            const originalText = btnFechaHoy.innerHTML;
+            // Animación: Cambia ícono y colores a verde
+            btnFechaHoy.innerHTML = '<svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg> ¡Actualizado!';
+            btnFechaHoy.classList.add('bg-emerald-100', 'text-emerald-700', 'border-emerald-300');
+            btnFechaHoy.classList.remove('bg-zinc-100', 'text-zinc-600', 'border-zinc-200');
+            
+            // Regresa a la normalidad después de 2 segundos
+            setTimeout(() => {
+                btnFechaHoy.innerHTML = originalText;
+                btnFechaHoy.classList.remove('bg-emerald-100', 'text-emerald-700', 'border-emerald-300');
+                btnFechaHoy.classList.add('bg-zinc-100', 'text-zinc-600', 'border-zinc-200');
+            }, 2000);
         }
     }
 
-    // 2. Lógica de Fechas
-    function setFechaHoy() {
-        const hoy = new Date();
-        const yyyy = hoy.getFullYear();
-        const mm = String(hoy.getMonth() + 1).padStart(2, '0');
-        const dd = String(hoy.getDate()).padStart(2, '0');
-        inputFecha.value = `${yyyy}-${mm}-${dd}`;
-        actualizarFechaImpresa();
-        // Disparar evento para que Dexie lo guarde (se configurará luego con pData)
-    }
-
-    function actualizarFechaImpresa() {
-        if (!inputFecha.value) return;
-        const [year, month, day] = inputFecha.value.split('-');
+    function actualizarFechaImpresa(dateStr) {
+        if (!dateStr) return;
+        const [year, month, day] = dateStr.split('-');
         const meses = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
         txtFechaImpresa.textContent = `Santiago, ${parseInt(day)} de ${meses[parseInt(month) - 1]} ${year}`;
     }
 
-    btnFechaHoy.addEventListener('click', setFechaHoy);
-    inputFecha.addEventListener('change', actualizarFechaImpresa);
+    // Inicializar fecha
+    if (!pData.cliente.fecha) {
+        setFechaHoy(false); // Día actual por defecto
+    } else {
+        fp.setDate(pData.cliente.fecha, false);
+        actualizarFechaImpresa(pData.cliente.fecha);
+    }
 
-    // 3. Toggle del Panel Historial
+    btnFechaHoy.addEventListener('click', () => setFechaHoy(true));
+
+    // 2. Toggle del Panel Historial
     const btnToggleHistorial = document.getElementById('btn-toggle-historial');
     const panelHistorial = document.getElementById('panel-historial');
     let historialVisible = true;
@@ -93,11 +116,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 
     // ==========================================
-    // ESTADO Y MOTOR DE CÁLCULO
+    // MOTOR DE CÁLCULO Y TABLAS
     // ==========================================
-    let pData = presupuestoActual; // Estado en memoria
-    if (!pData.items) pData.items = []; // Asegurar que exista el array
-    
     let isEditMode = false; // Estado del modo de edición
 
     const itemsContainer = document.getElementById('items-container');
