@@ -1,5 +1,5 @@
-import { db } from './firebase-config.js';
-// Importaremos funciones de versions.js cuando las construyamos
+import { db as nubeDB } from './firebase-config.js';
+import { localDB } from './db.js';
 
 document.addEventListener('DOMContentLoaded', () => {
     // Referencias de Vistas
@@ -8,6 +8,9 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Referencias Botones Navegación
     const btnNuevo = document.getElementById('btn-nuevo-presupuesto');
+    
+    // Variable para saber qué presupuesto estamos editando
+    let presupuestoActualId = null;
     const btnVolver = document.getElementById('btn-volver-dashboard');
     const btnImprimir = document.getElementById('btn-imprimir');
     
@@ -17,11 +20,30 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // === NAVEGACIÓN ===
     
-    btnNuevo.addEventListener('click', () => {
-        // Limpiar formulario y abrir editor
+    btnNuevo.addEventListener('click', async () => {
+        // 1. Generamos un ID único y la estructura base
+        presupuestoActualId = `presupuesto_${Date.now()}`;
+        const nuevoPresupuesto = {
+            id: presupuestoActualId,
+            codigoProyecto: "Nuevo Proyecto",
+            fechaCreacion: new Date().toISOString(),
+            fechaModificacion: new Date().toISOString(),
+            cliente: { destinatario: "", constructora: "", ubicacion: "" },
+            encabezadoTexto: "Según lo solicitado por Uds., referente al presupuesto de paisajismo y riego...",
+            items: [],
+            totales: { costoDirectoTotal: 0, gastosGeneralesMonto: 0, utilidadManual: 0, totalNeto: 0 },
+            historialVersiones: []
+        };
+
+        // 2. Guardamos silenciosamente en la base local (Dexie)
+        await localDB.presupuestos.put(nuevoPresupuesto);
+        
+        // 3. Preparamos la interfaz visual
         resetearEditor();
         dashboardView.classList.add('hidden');
         editorView.classList.remove('hidden');
+        
+        console.log("Presupuesto creado localmente:", nuevoPresupuesto.id);
     });
 
     btnVolver.addEventListener('click', () => {
