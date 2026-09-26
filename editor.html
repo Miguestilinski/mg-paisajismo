@@ -81,6 +81,15 @@
                     <input type="text" id="proyecto-input" class="text-center w-full max-w-md mx-auto border border-zinc-300 bg-zinc-50 hover:bg-zinc-100 focus:bg-white focus:border-zinc-900 focus:ring-1 focus:ring-zinc-900 rounded-md p-2 mt-4 font-bold transition-colors print:border-0 print:bg-transparent print:p-0 print:mt-1" placeholder="NOMBRE DEL PROYECTO">
                 </div>
 
+                <!-- Controles de Edición Estructural -->
+                <div class="flex justify-between items-end mb-4 print:hidden border-b border-zinc-200 pb-2 mt-12">
+                    <h2 class="font-bold text-zinc-700 uppercase tracking-wider text-sm">Detalle de Partidas</h2>
+                    <button id="btn-toggle-edit" class="text-sm font-bold text-zinc-500 hover:text-blue-600 flex items-center gap-1.5 transition-colors bg-zinc-100 hover:bg-zinc-200 px-3 py-1.5 rounded-md">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
+                        Editar Estructura
+                    </button>
+                </div>
+
                 <!-- Contenedor Dinámico -->
                 <div id="items-container" class="mb-10 space-y-8"></div>
 

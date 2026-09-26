@@ -54,12 +54,25 @@ document.addEventListener('DOMContentLoaded', async () => {
     let pData = presupuestoActual; // Estado en memoria
     if (!pData.items) pData.items = []; // Asegurar que exista el array
     
+    let isEditMode = false; // Estado del modo de edición
+
     const itemsContainer = document.getElementById('items-container');
     const inputUtilidad = document.getElementById('input-utilidad');
+    const btnToggleEdit = document.getElementById('btn-toggle-edit');
 
     // Funciones de formato de dinero (1000000 -> 1.000.000)
     const formatCLP = (num) => new Intl.NumberFormat('es-CL').format(Math.round(num));
     const parseCLP = (str) => parseFloat(str.toString().replace(/\./g, '').replace(/,/g, '')) || 0;
+
+    // --- Modo Edición Toggle ---
+    btnToggleEdit.addEventListener('click', () => {
+        isEditMode = !isEditMode;
+        btnToggleEdit.classList.toggle('text-blue-600', isEditMode);
+        btnToggleEdit.classList.toggle('bg-blue-100', isEditMode);
+        btnToggleEdit.classList.toggle('text-zinc-500', !isEditMode);
+        btnToggleEdit.classList.toggle('bg-zinc-100', !isEditMode);
+        renderItems(); // Re-renderizar para mostrar/ocultar botones de borrar
+    });
 
     // --- 0. DATALIST DINÁMICO DE UNIDADES ---
     let unidadesDisponibles = ['unid', 'm2', 'm3', 'ml', 'gl', 'Kg'];
