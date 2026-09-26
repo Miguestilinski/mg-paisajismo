@@ -13,29 +13,73 @@ document.addEventListener('DOMContentLoaded', async () => {
     const inputDestinatario = document.getElementById('destinatario-input');
     const lblSaludoNombre = document.getElementById('saludo-nombre');
     const btnImprimir = document.getElementById('btn-imprimir');
+    const inputFecha = document.getElementById('fecha-input');
+    const txtFechaImpresa = document.getElementById('fecha-impresa');
+    const btnFechaHoy = document.getElementById('btn-fecha-hoy');
 
     // 1. Cargar datos del presupuesto
     const presupuestoActual = await localDB.presupuestos.get(id);
     
     if (presupuestoActual) {
-        // Rellenar formulario inicial (Lo completaremos más adelante con todos los campos)
-        if (!document.getElementById('fecha-input').value) {
-            document.getElementById('fecha-input').value = `Santiago, ${obtenerFechaActual()}`;
+        // Formulario inicial: Cargar fecha o poner la de hoy si está vacío
+        // Nota: pData se define abajo, pero cargamos el input directamente por ahora
+        if (!presupuestoActual.cliente?.fecha) {
+            setFechaHoy();
+        } else {
+            inputFecha.value = presupuestoActual.cliente.fecha;
+            actualizarFechaImpresa();
         }
     }
 
-    // 2. Reactividad UI Básica
+    // 2. Lógica de Fechas
+    function setFechaHoy() {
+        const hoy = new Date();
+        const yyyy = hoy.getFullYear();
+        const mm = String(hoy.getMonth() + 1).padStart(2, '0');
+        const dd = String(hoy.getDate()).padStart(2, '0');
+        inputFecha.value = `${yyyy}-${mm}-${dd}`;
+        actualizarFechaImpresa();
+        // Disparar evento para que Dexie lo guarde (se configurará luego con pData)
+    }
+
+    function actualizarFechaImpresa() {
+        if (!inputFecha.value) return;
+        const [year, month, day] = inputFecha.value.split('-');
+        const meses = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
+        txtFechaImpresa.textContent = `Santiago, ${parseInt(day)} de ${meses[parseInt(month) - 1]} ${year}`;
+    }
+
+    btnFechaHoy.addEventListener('click', setFechaHoy);
+    inputFecha.addEventListener('change', actualizarFechaImpresa);
+
+    // 3. Toggle del Panel Historial
+    const btnToggleHistorial = document.getElementById('btn-toggle-historial');
+    const panelHistorial = document.getElementById('panel-historial');
+    let historialVisible = true;
+
+    btnToggleHistorial.addEventListener('click', () => {
+        historialVisible = !historialVisible;
+        if (historialVisible) {
+            panelHistorial.classList.remove('w-0', 'border-0', 'opacity-0');
+            panelHistorial.classList.add('w-80', 'border-l');
+        } else {
+            panelHistorial.classList.add('w-0', 'border-0', 'opacity-0');
+            panelHistorial.classList.remove('w-80', 'border-l');
+        }
+    });
+
+    // 4. Reactividad UI Básica
     inputDestinatario.addEventListener('input', (e) => {
         const valor = e.target.value.trim();
         lblSaludoNombre.textContent = valor !== '' ? valor : '[Nombre]';
     });
 
-    // 3. Evento de impresión
+    // 5. Evento de impresión
     btnImprimir.addEventListener('click', () => {
         window.print();
     });
 
-    // 4. Auto-ajuste de altura para el área de texto (Carta)
+    // 6. Auto-ajuste de altura para el área de texto (Carta)
     const textareaIntro = document.getElementById('intro-texto');
     
     function autoResizeTextarea() {
@@ -378,9 +422,18 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
     guardarYRenderizar();
 
-    function obtenerFechaActual() {
-        const meses = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
-        const fecha = new Date();
-        return `${fecha.getDate()} de ${meses[fecha.getMonth()]} ${fecha.getFullYear()}`;
-    }
+    // Escuchar cambios en los inputs del encabezado (Destinatario, Constructora, Fecha, Intro)
+    const containerHeader = document.querySelector('section.grid');
+    const containerIntro = document.querySelector('section.mb-10');
+    
+    [containerHeader, containerIntro].forEach(contenedor => {
+        contenedor.addEventListener('input', (e) => {
+            if (e.target.id === 'fecha-input') pData.cliente.fecha = e.target.value;
+            if (e.target.id === 'destinatario-input') pData.cliente.destinatario = e.target.value;
+            if (e.target.id === 'constructora-input') pData.cliente.constructora = e.target.value;
+            if (e.target.id === 'intro-texto') pData.encabezadoTexto = e.target.value;
+            localDB.presupuestos.put(pData);
+        });
+    });
+
 });
