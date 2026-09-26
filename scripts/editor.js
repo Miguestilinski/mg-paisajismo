@@ -162,13 +162,25 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     btnFechaHoy.addEventListener('click', () => setFechaHoy(true));
 
-    // 2. Toggle del Panel Historial
+    // 2. Toggle del Panel Historial con Memoria (Local Storage)
     const btnToggleHistorial = document.getElementById('btn-toggle-historial');
     const panelHistorial = document.getElementById('panel-historial');
-    let historialVisible = true;
+    
+    // Cargar estado previo o defecto true
+    let historialVisible = localStorage.getItem('historialVisible');
+    historialVisible = historialVisible !== null ? JSON.parse(historialVisible) : true;
+
+    // Aplicar estado inicial sin animaciones para que no salte
+    if (!historialVisible) {
+        panelHistorial.classList.add('w-0', 'border-0', 'opacity-0', 'duration-0');
+        panelHistorial.classList.remove('w-80', 'border-l');
+        setTimeout(() => panelHistorial.classList.remove('duration-0'), 100);
+    }
 
     btnToggleHistorial.addEventListener('click', () => {
         historialVisible = !historialVisible;
+        localStorage.setItem('historialVisible', JSON.stringify(historialVisible));
+        
         if (historialVisible) {
             panelHistorial.classList.remove('w-0', 'border-0', 'opacity-0');
             panelHistorial.classList.add('w-80', 'border-l');
