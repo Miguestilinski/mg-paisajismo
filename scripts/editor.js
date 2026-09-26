@@ -146,14 +146,30 @@ document.addEventListener('DOMContentLoaded', async () => {
                         <input type="text" inputmode="numeric" class="input-art w-full border border-zinc-300 bg-zinc-50 hover:bg-zinc-100 focus:bg-white focus:border-zinc-900 rounded p-1.5 pl-6 text-sm text-right transition-colors print:border-0 print:bg-transparent print:p-0 print:pl-0" data-campo="precioUnitario" value="${art.precioUnitario ? formatCLP(art.precioUnitario) : ''}">
                     </td>
                     <td class="pb-2 font-semibold text-right align-middle text-zinc-800 art-total">$${formatCLP(art.precioTotal)}</td>
+                    <td class="pb-2 w-8 text-center print:hidden ${isEditMode ? '' : 'hidden'}">
+                        <button class="btn-del-art text-red-400 hover:text-red-600 transition-colors p-1" data-cat="${catIndex}" data-art="${artIndex}" title="Eliminar artículo">
+                            <svg class="w-5 h-5 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                        </button>
+                    </td>
                 </tr>
             `).join('');
 
             const catHtml = `
-                <div class="mb-8" data-cat-index="${catIndex}">
-                    <h3 class="font-bold text-lg text-zinc-900 mb-4 border-b-2 border-zinc-900 pb-1">
-                        ${catIndex + 1}. ${cat.titulo}
-                    </h3>
+                <div class="mb-8 relative" data-cat-index="${catIndex}">
+                    <div class="font-bold text-lg text-zinc-900 mb-4 border-b-2 border-zinc-900 pb-1 flex justify-between items-end">
+                        <div class="flex items-center flex-1 pr-4">
+                            <span class="mr-2">${catIndex + 1}.</span>
+                            <input type="text" class="input-cat-titulo w-full bg-transparent border-0 p-0 font-bold text-lg focus:ring-0 ${isEditMode ? 'border-b border-dashed border-zinc-400 bg-zinc-50/50 cursor-text rounded-none' : 'pointer-events-none cursor-default'}" data-cat="${catIndex}" value="${cat.titulo}">
+                        </div>
+                        <div class="flex items-center gap-4">
+                            <div class="flex gap-1 print:hidden ${isEditMode ? '' : 'hidden'}">
+                                <button class="btn-up-cat text-zinc-400 hover:text-zinc-800 p-1 disabled:opacity-30" data-cat="${catIndex}" ${catIndex === 0 ? 'disabled' : ''}><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"></path></svg></button>
+                                <button class="btn-down-cat text-zinc-400 hover:text-zinc-800 p-1 disabled:opacity-30" data-cat="${catIndex}" ${catIndex === pData.items.length - 1 ? 'disabled' : ''}><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg></button>
+                                <button class="btn-del-cat text-red-400 hover:text-red-600 p-1 ml-2" data-cat="${catIndex}" title="Eliminar Ítem Completo"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg></button>
+                            </div>
+                            <span class="text-sm font-bold text-zinc-600 cat-subtotal whitespace-nowrap">Subtotal: $${formatCLP(cat.subtotal)}</span>
+                        </div>
+                    </div>
                     
                     ${cat.subitems.length > 0 ? `
                         <div class="overflow-x-auto mb-3">
@@ -166,10 +182,12 @@ document.addEventListener('DOMContentLoaded', async () => {
                                         <th class="pb-2 w-[10%]">Unid.</th>
                                         <th class="pb-2 w-[15%] text-right">P. Unit</th>
                                         <th class="pb-2 w-[10%] text-right">Total</th>
+                                        <th class="pb-2 w-8 print:hidden ${isEditMode ? '' : 'hidden'}"></th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     ${htmlArticulos}                                 </tbody>                                 <tfoot>                                     <tr>                                         <td colspan="5" class="text-right py-3 pr-4 font-bold text-zinc-600">Subtotal:</td>                                         <td class="py-3 text-right font-bold text-zinc-900 border-t border-zinc-300 cat-subtotal">$${formatCLP(cat.subtotal)}</td>
+                                        <td class="print:hidden ${isEditMode ? '' : 'hidden'}"></td>
                                     </tr>
                                 </tfoot>
                             </table>
@@ -226,9 +244,14 @@ document.addEventListener('DOMContentLoaded', async () => {
         await localDB.presupuestos.put(pData);
     }
 
-    // Escuchar clics en botones generados dinámicamente (+ Añadir Artículo)
+    // Delegación de eventos para botones dinámicos (Añadir, Eliminar, Reordenar)
     itemsContainer.addEventListener('click', (e) => {
         const btnAdd = e.target.closest('.btn-add-art');
+        const btnDelArt = e.target.closest('.btn-del-art');
+        const btnDelCat = e.target.closest('.btn-del-cat');
+        const btnUpCat = e.target.closest('.btn-up-cat');
+        const btnDownCat = e.target.closest('.btn-down-cat');
+
         if (btnAdd) {
             const catIndex = btnAdd.dataset.cat;
             pData.items[catIndex].subitems.push({
@@ -240,11 +263,42 @@ document.addEventListener('DOMContentLoaded', async () => {
                 const inputs = itemsContainer.querySelectorAll(`tr[data-cat="${catIndex}"]`).lastChild?.querySelectorAll('input');
                 if(inputs) inputs[0].focus();
             }, 50);
+        } else if (btnDelArt) {
+            const cIdx = parseInt(btnDelArt.dataset.cat);
+            const aIdx = parseInt(btnDelArt.dataset.art);
+            pData.items[cIdx].subitems.splice(aIdx, 1);
+            guardarYRenderizar();
+        } else if (btnDelCat) {
+            const cIdx = parseInt(btnDelCat.dataset.cat);
+            if (confirm(`¿Seguro que deseas eliminar el ítem "${pData.items[cIdx].titulo}" y todos sus artículos?`)) {
+                pData.items.splice(cIdx, 1);
+                guardarYRenderizar();
+            }
+        } else if (btnUpCat) {
+            const cIdx = parseInt(btnUpCat.dataset.cat);
+            if (cIdx > 0) {
+                [pData.items[cIdx - 1], pData.items[cIdx]] = [pData.items[cIdx], pData.items[cIdx - 1]];
+                guardarYRenderizar();
+            }
+        } else if (btnDownCat) {
+            const cIdx = parseInt(btnDownCat.dataset.cat);
+            if (cIdx < pData.items.length - 1) {
+                [pData.items[cIdx + 1], pData.items[cIdx]] = [pData.items[cIdx], pData.items[cIdx + 1]];
+                guardarYRenderizar();
+            }
         }
     });
 
     // Escuchar cambios y formatear en vivo
     itemsContainer.addEventListener('input', (e) => {
+        // Renombrar Categoría / Ítem
+        if (e.target.classList.contains('input-cat-titulo')) {
+            const catIndex = e.target.dataset.cat;
+            pData.items[catIndex].titulo = e.target.value;
+            localDB.presupuestos.put(pData); // Guardar silenciosamente sin perder foco
+            return;
+        }
+
         if (e.target.classList.contains('input-art')) {
             const campo = e.target.dataset.campo;
             
@@ -273,7 +327,18 @@ document.addEventListener('DOMContentLoaded', async () => {
             if (campo === 'cantidad' || campo === 'precioUnitario') {
                 recalcularTotales();
                 tr.querySelector('.art-total').textContent = `$${formatCLP(pData.items[catIndex].subitems[artIndex].precioTotal)}`;
-                tr.closest('[data-cat-index]').querySelector('.cat-subtotal').textContent = `$${formatCLP(pData.items[catIndex].subtotal)}`;
+                
+                // Actualiza ambos elementos del subtotal (El del título y el del pie de tabla)
+                const catContainer = tr.closest('[data-cat-index]');
+                catContainer.querySelectorAll('.cat-subtotal').forEach(el => {
+                    // Si es la celda de la tabla, quitamos el texto "Subtotal: " que ya tiene en la celda anterior
+                    if (el.tagName === 'TD') {
+                        el.textContent = `$${formatCLP(pData.items[catIndex].subtotal)}`;
+                    } else {
+                        el.textContent = `Subtotal: $${formatCLP(pData.items[catIndex].subtotal)}`;
+                    }
+                });
+                
                 localDB.presupuestos.put(pData);
             } else {
                 localDB.presupuestos.put(pData);
