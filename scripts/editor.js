@@ -1,4 +1,5 @@
 import { localDB } from './db.js';
+import { renderizarRioVersiones } from './versions.js';
 
 document.addEventListener('DOMContentLoaded', async () => {
     // Obtener ID desde la URL (ej: editor.html?id=presupuesto_123)
@@ -97,8 +98,17 @@ document.addEventListener('DOMContentLoaded', async () => {
         lblSaludoNombre.textContent = valor !== '' ? valor : '[Nombre]';
     });
 
-    // 5. Evento de impresión
-    btnImprimir.addEventListener('click', () => {
+    // 5. Evento de impresión (Crea versión automática)
+    btnImprimir.addEventListener('click', async () => {
+        // Autoguardar un hito antes de imprimir
+        pData.historialVersiones.push({
+            versionId: `v_pdf_${Date.now()}`,
+            fechaHora: new Date().toISOString(),
+            etiqueta: "PDF Generado",
+            snapshot: JSON.parse(JSON.stringify(pData))
+        });
+        await guardarYRenderizar();
+        
         window.print();
     });
 
@@ -119,6 +129,64 @@ document.addEventListener('DOMContentLoaded', async () => {
     // MOTOR DE CÁLCULO Y TABLAS
     // ==========================================
     let isEditMode = false; // Estado del modo de edición
+    let timeoutGuardado = null; // Timer para el semáforo
+
+    const semaforoUI = document.getElementById('semaforo-guardado');
+    const semaforoDot = semaforoUI.querySelector('.indicator-dot');
+    const semaforoText = semaforoUI.querySelector('.indicator-text');
+
+    function indicarGuardando() {
+        semaforoUI.className = "flex items-center gap-2 mr-2 text-sm font-medium text-amber-500 transition-colors duration-300";
+        semaforoDot.className = "w-2.5 h-2.5 rounded-full bg-amber-400 shadow-[0_0_8px_rgba(251,191,36,0.6)] indicator-dot animate-pulse";
+        semaforoText.textContent = "Guardando...";
+    }
+
+    function indicarGuardadoOK() {
+        semaforoUI.className = "flex items-center gap-2 mr-2 text-sm font-medium text-emerald-600 transition-colors duration-300";
+        semaforoDot.className = "w-2.5 h-2.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)] indicator-dot";
+        semaforoText.textContent = "Guardado";
+    }
+
+    // --- Historial de Versiones (Hitos) ---
+    if (!pData.historialVersiones) pData.historialVersiones = [];
+    
+    const restaurarVersion = async (snapshot) => {
+        // Clon profundo del snapshot para no cruzar referencias
+        pData = JSON.parse(JSON.stringify(snapshot));
+        pData.fechaModificacion = new Date().toISOString();
+        
+        // Actualizar inputs UI principales
+        inputDestinatario.value = pData.cliente.destinatario || '';
+        document.getElementById('constructora-input').value = pData.cliente.constructora || '';
+        document.getElementById('proyecto-input').value = pData.codigoProyecto || '';
+        document.getElementById('intro-texto').value = pData.encabezadoTexto || '';
+        inputUtilidad.value = pData.totales.utilidadManual > 0 ? formatCLP(pData.totales.utilidadManual) : '';
+        lblSaludoNombre.textContent = pData.cliente.destinatario || '[Nombre]';
+        
+        if (pData.cliente.fecha) {
+            fp.setDate(pData.cliente.fecha, false);
+            actualizarFechaImpresa(pData.cliente.fecha);
+        }
+
+        await guardarYRenderizar(); // Recalcula y dibuja todo
+    };
+
+    renderizarRioVersiones(pData.historialVersiones, restaurarVersion);
+
+    document.getElementById('btn-guardar-version').addEventListener('click', async () => {
+        const etiqueta = prompt("Nombre de esta versión (Ej: Opción sin pileta):");
+        if (etiqueta === null) return; // Canceló
+
+        const nuevaVersion = {
+            versionId: `v_${Date.now()}`,
+            fechaHora: new Date().toISOString(),
+            etiqueta: etiqueta || "Guardado manual",
+            snapshot: JSON.parse(JSON.stringify(pData)) // Clon completo
+        };
+
+        pData.historialVersiones.push(nuevaVersion);
+        await guardarYRenderizar(); // Guarda la nueva array en Dexie
+    });
 
     const itemsContainer = document.getElementById('items-container');
     const inputUtilidad = document.getElementById('input-utilidad');
@@ -300,10 +368,19 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     async function guardarYRenderizar() {
+        indicarGuardando(); // Pone el semáforo en amarillo
         recalcularTotales();
         renderItems();
         pData.fechaModificacion = new Date().toISOString();
+        
+        // El río se redibuja en caso de que se haya agregado una versión
+        renderizarRioVersiones(pData.historialVersiones, restaurarVersion);
+        
         await localDB.presupuestos.put(pData);
+        
+        // Debounce para volver a verde (da sensación de que terminó de procesar)
+        clearTimeout(timeoutGuardado);
+        timeoutGuardado = setTimeout(indicarGuardadoOK, 800);
     }
 
     // Delegación de eventos para botones dinámicos (Añadir, Eliminar, Reordenar)
@@ -442,17 +519,26 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
     guardarYRenderizar();
 
-    // Escuchar cambios en los inputs del encabezado (Destinatario, Constructora, Fecha, Intro)
+    // Escuchar cambios en los inputs del encabezado (Destinatario, Constructora, Proyecto, Intro)
     const containerHeader = document.querySelector('section.grid');
     const containerIntro = document.querySelector('section.mb-10');
+    const inputProyecto = document.getElementById('proyecto-input');
     
-    [containerHeader, containerIntro].forEach(contenedor => {
+    [containerHeader, containerIntro, inputProyecto].forEach(contenedor => {
+        if(!contenedor) return;
         contenedor.addEventListener('input', (e) => {
+            indicarGuardando();
             if (e.target.id === 'fecha-input') pData.cliente.fecha = e.target.value;
             if (e.target.id === 'destinatario-input') pData.cliente.destinatario = e.target.value;
             if (e.target.id === 'constructora-input') pData.cliente.constructora = e.target.value;
             if (e.target.id === 'intro-texto') pData.encabezadoTexto = e.target.value;
+            if (e.target.id === 'proyecto-input') pData.codigoProyecto = e.target.value;
+            
+            pData.fechaModificacion = new Date().toISOString();
             localDB.presupuestos.put(pData);
+            
+            clearTimeout(timeoutGuardado);
+            timeoutGuardado = setTimeout(indicarGuardadoOK, 800);
         });
     });
 

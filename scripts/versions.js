@@ -1,37 +1,45 @@
 // Este script manejará el historial local de un presupuesto activo.
 
-export function renderizarRioVersiones(versiones) {
+export function renderizarRioVersiones(versiones, onRestoreCallback) {
     const contenedor = document.getElementById('rio-versiones');
-    // Limpiamos contenido manteniendo la línea base
-    contenedor.innerHTML = '<div class="absolute left-8 top-0 bottom-0 w-0.5 bg-gray-200 z-0"></div>';
+    contenedor.innerHTML = '<div class="absolute left-8 top-0 bottom-0 w-0.5 bg-zinc-200 z-0"></div>';
 
     if (!versiones || versiones.length === 0) {
         contenedor.innerHTML += `
-            <div class="relative z-10 pl-16 py-4 text-sm text-gray-500 italic">
-                Aún no hay puntos de guardado.
+            <div class="relative z-10 pl-14 py-4 text-sm text-zinc-500 italic">
+                Aún no hay versiones guardadas.
             </div>
         `;
         return;
     }
 
-    versiones.forEach((ver, index) => {
-        const isLatest = index === 0; // Asumimos que la lista viene ordenada del más nuevo al más viejo
-        const colorPunto = isLatest ? 'bg-blue-500 ring-blue-200' : 'bg-gray-400 ring-gray-100';
-        const colorTexto = isLatest ? 'text-gray-900 font-bold' : 'text-gray-600';
-        
-        const nodoHtml = `
-            <div class="relative z-10 flex items-start mb-6 group cursor-pointer hover:bg-gray-50 p-2 -ml-2 rounded transition-colors">
-                <!-- Círculo del Nodo -->
-                <div class="absolute left-4 top-4 w-4 h-4 rounded-full ${colorPunto} ring-4 shadow-sm"></div>
-                
-                <div class="pl-14 w-full">
-                    <p class="text-xs text-gray-500 mb-1">${formatearHora(ver.fechaHora)}</p>
-                    <p class="text-sm ${colorTexto}">${ver.etiqueta || 'Guardado automático'}</p>
-                    <p class="text-xs font-semibold text-green-700 mt-1">Neto: $${ver.montoNetoFormateado}</p>
-                </div>
+    // Ordenar del más nuevo (arriba) al más viejo (abajo)
+    const versionesOrdenadas = [...versiones].sort((a, b) => new Date(b.fechaHora) - new Date(a.fechaHora));
+
+    versionesOrdenadas.forEach((ver, index) => {
+        const isLatest = index === 0;
+        const colorPunto = isLatest ? 'bg-zinc-800 ring-zinc-200' : 'bg-zinc-300 ring-white';
+        const colorTexto = isLatest ? 'text-zinc-900 font-bold' : 'text-zinc-600 font-medium';
+        const formatCLP = (num) => new Intl.NumberFormat('es-CL').format(Math.round(num));
+
+        const nodoHtml = document.createElement('div');
+        nodoHtml.className = "relative z-10 flex items-start mb-6 group cursor-pointer hover:bg-white p-2 -ml-2 rounded-lg transition-colors border border-transparent hover:border-zinc-200 shadow-sm hover:shadow";
+        nodoHtml.innerHTML = `
+            <div class="absolute left-4 top-4 w-3.5 h-3.5 rounded-full ${colorPunto} ring-4 shadow-sm"></div>
+            <div class="pl-12 w-full">
+                <p class="text-xs text-zinc-400 mb-0.5">${formatearHora(ver.fechaHora)}</p>
+                <p class="text-sm ${colorTexto} leading-tight">${ver.etiqueta || 'Guardado manual'}</p>
+                <p class="text-xs font-bold text-zinc-800 mt-1.5 bg-zinc-100 inline-block px-2 py-0.5 rounded">Neto: $${formatCLP(ver.snapshot.totales.totalNeto)}</p>
             </div>
         `;
-        contenedor.insertAdjacentHTML('beforeend', nodoHtml);
+
+        nodoHtml.addEventListener('click', () => {
+            if (confirm(`¿Restaurar la versión "${ver.etiqueta}" de las ${formatearHora(ver.fechaHora)}?\n\nLos cambios actuales no guardados se perderán.`)) {
+                onRestoreCallback(ver.snapshot);
+            }
+        });
+
+        contenedor.appendChild(nodoHtml);
     });
 }
 
@@ -39,12 +47,3 @@ function formatearHora(isoString) {
     const date = new Date(isoString);
     return date.toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit' }) + ' - ' + date.toLocaleDateString('es-CL');
 }
-
-// Ejemplo temporal para verificar que se ve bien en la UI:
-document.addEventListener('DOMContentLoaded', () => {
-    const mockVersiones = [
-        { fechaHora: new Date().toISOString(), etiqueta: 'Versión actual', montoNetoFormateado: '93.967.498' },
-        { fechaHora: new Date(Date.now() - 3600000).toISOString(), etiqueta: 'Agregado juegos infantiles', montoNetoFormateado: '85.450.000' }
-    ];
-    renderizarRioVersiones(mockVersiones);
-});
