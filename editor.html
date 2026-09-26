@@ -24,33 +24,45 @@
         <!-- Panel Principal (Contiene herramientas y hoja) -->
         <main class="flex-1 overflow-y-auto p-8 print:p-0 print:bg-white print:overflow-visible">
             
-            <!-- Contenedor Superior: Barra + Semáforo -->
-            <div class="flex justify-between items-start mb-6 print:hidden sticky top-0 z-20 gap-4">
+            <!-- Contenedor Superior: Barra + Semáforo flotante -->
+            <div class="mb-6 print:hidden sticky top-0 z-20">
                 
                 <!-- Barra de Herramientas Principal -->
-                <div class="flex-1 flex justify-between items-center bg-white/85 backdrop-blur-md p-4 rounded-xl shadow-lg border border-white/40">
+                <div class="w-full flex justify-between items-center bg-white/85 backdrop-blur-md p-4 rounded-xl shadow-lg border border-white/40">
                     <a href="index.html" class="text-zinc-600 hover:text-zinc-900 font-medium flex items-center gap-2 transition-colors">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
                         Volver al inicio
                     </a>
                     
                     <div class="flex items-center gap-3">
-                        <button id="btn-pegar-riego" class="bg-zinc-100 hover:bg-zinc-200 border border-zinc-300 text-zinc-700 py-2 px-3 rounded-lg transition-colors flex items-center shadow-sm" title="Importar Riego">
+                        <button id="btn-pegar-riego" class="bg-zinc-100 hover:bg-zinc-200 border border-zinc-300 text-zinc-700 py-2 px-3 rounded-lg transition-colors flex items-center gap-2 shadow-sm" title="Importar Riego">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                            <span class="font-semibold text-sm">Importar</span>
                         </button>
-                        <button id="btn-imprimir" class="bg-zinc-900 hover:bg-zinc-800 text-white py-2 px-3 rounded-lg transition-colors shadow-md flex items-center" title="Imprimir / Generar PDF">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
+
+                        <button id="btn-guardar-version" class="bg-zinc-100 hover:bg-zinc-200 border border-zinc-300 text-zinc-700 py-2 px-3 rounded-lg transition-colors shadow-sm" title="Guardar Versión Manual">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2"></path></svg>
                         </button>
+
+                        <button id="btn-imprimir" class="bg-zinc-900 hover:bg-zinc-800 text-white py-2 px-4 rounded-lg transition-colors shadow-md flex items-center gap-2" title="Terminar / Generar PDF">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                            <span class="font-semibold text-sm">Terminar</span>
+                        </button>
+
+                        <div class="h-6 w-px bg-zinc-300 mx-1"></div> <!-- Separador visual -->
+
                         <button id="btn-toggle-historial" class="bg-white text-zinc-600 hover:text-zinc-900 border border-zinc-300 py-2 px-3 rounded-lg transition-colors flex items-center shadow-sm" title="Mostrar/Ocultar Historial">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                         </button>
                     </div>
                 </div>
 
-                <!-- Semáforo de Autoguardado (Independiente a la derecha) -->
-                <div id="semaforo-guardado" class="flex items-center gap-2 px-4 py-3 bg-white/85 backdrop-blur-md rounded-xl shadow-lg border border-white/40 text-sm font-medium text-emerald-600 transition-colors duration-300 h-[58px]">
-                    <div class="w-2.5 h-2.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)] indicator-dot"></div>
-                    <span class="indicator-text whitespace-nowrap">Guardado</span>
+                <!-- Semáforo flotante alineado a la derecha -->
+                <div class="flex justify-end mt-2 pr-2">
+                    <div id="semaforo-guardado" class="flex items-center gap-2 px-3 py-1.5 bg-white/90 backdrop-blur-md rounded-full shadow-sm border border-zinc-200 text-xs font-medium text-emerald-600 transition-colors duration-300">
+                        <div class="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)] indicator-dot"></div>
+                        <span class="indicator-text whitespace-nowrap">Guardado</span>
+                    </div>
                 </div>
             </div>
 
@@ -174,14 +186,11 @@
 
         <!-- Río de Versiones Lateral -->
         <aside id="panel-historial" class="w-80 border-l border-white/40 bg-white/85 backdrop-blur-md flex flex-col print:hidden shadow-2xl z-10 transition-all duration-300">
-            <div class="p-4 border-b border-zinc-200 flex justify-between items-center bg-white/50">
+            <div class="p-4 border-b border-zinc-200 flex items-center bg-white/50">
                 <h3 class="font-bold text-zinc-800 uppercase tracking-wider text-sm flex items-center gap-2">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"></path></svg>
-                    Historial
+                    Historial de Versiones
                 </h3>
-                <button id="btn-guardar-version" class="bg-zinc-900 text-white p-2 rounded-md hover:bg-zinc-700 transition-colors shadow-sm" title="Guardar Versión">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2"></path></svg>
-                </button>
             </div>
             <div class="flex-1 overflow-y-auto p-4 relative" id="rio-versiones">
                 <!-- Se inyectarán desde versions.js -->

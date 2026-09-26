@@ -234,14 +234,14 @@ document.addEventListener('DOMContentLoaded', async () => {
     const semaforoText = semaforoUI.querySelector('.indicator-text');
 
     function indicarGuardando() {
-        semaforoUI.className = "flex items-center gap-2 mr-2 text-sm font-medium text-amber-500 transition-colors duration-300";
-        semaforoDot.className = "w-2.5 h-2.5 rounded-full bg-amber-400 shadow-[0_0_8px_rgba(251,191,36,0.6)] indicator-dot animate-pulse";
+        semaforoUI.className = "flex items-center gap-2 px-3 py-1.5 bg-white/90 backdrop-blur-md rounded-full shadow-sm border border-zinc-200 text-xs font-medium text-amber-500 transition-colors duration-300";
+        semaforoDot.className = "w-2 h-2 rounded-full bg-amber-400 shadow-[0_0_8px_rgba(251,191,36,0.6)] indicator-dot animate-pulse";
         semaforoText.textContent = "Guardando...";
     }
 
     function indicarGuardadoOK() {
-        semaforoUI.className = "flex items-center gap-2 mr-2 text-sm font-medium text-emerald-600 transition-colors duration-300";
-        semaforoDot.className = "w-2.5 h-2.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)] indicator-dot";
+        semaforoUI.className = "flex items-center gap-2 px-3 py-1.5 bg-white/90 backdrop-blur-md rounded-full shadow-sm border border-zinc-200 text-xs font-medium text-emerald-600 transition-colors duration-300";
+        semaforoDot.className = "w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)] indicator-dot";
         semaforoText.textContent = "Guardado";
     }
 
