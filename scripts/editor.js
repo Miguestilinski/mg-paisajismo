@@ -74,22 +74,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         renderItems(); // Re-renderizar para mostrar/ocultar botones de borrar
     });
 
-    // --- 0. DATALIST DINÁMICO DE UNIDADES ---
-    let unidadesDisponibles = ['unid', 'm2', 'm3', 'ml', 'gl', 'Kg'];
-    function actualizarDatalistUnidades() {
-        let dl = document.getElementById('lista-unidades');
-        if (!dl) {
-            dl = document.createElement('datalist');
-            dl.id = 'lista-unidades';
-            document.body.appendChild(dl);
-        }
-        // Recolectar unidades personalizadas guardadas previamente
-        pData.items.forEach(cat => cat.subitems.forEach(art => {
-            if (art.unidad && !unidadesDisponibles.includes(art.unidad)) unidadesDisponibles.push(art.unidad);
-        }));
-        dl.innerHTML = unidadesDisponibles.map(u => `<option value="${u}"></option>`).join('');
-    }
-    actualizarDatalistUnidades();
+    // --- 0. UNIDADES DINÁMICAS ---
+    let unidadesBase = ['unid', 'm2', 'm3', 'ml', 'gl', 'Kg'];
 
     // --- 1. LÓGICA DEL DROPDOWN ---
     const btnToggleCat = document.getElementById('btn-toggle-cat');
@@ -105,6 +91,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.addEventListener('click', (e) => {
         if (!dropdownCat.contains(e.target) && e.target !== btnToggleCat) {
             dropdownCat.classList.add('hidden');
+        }
+        if (!e.target.classList.contains('input-unidad')) {
+            document.querySelectorAll('.dropdown-unidad').forEach(d => d.classList.add('hidden'));
         }
     });
 
@@ -131,6 +120,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     // --- 2. RENDERIZADO DE TABLAS ---
     function renderItems() {
         itemsContainer.innerHTML = '';
+
+        // Recolectar unidades nuevas antes de renderizar
+        let unidadesDisponibles = [...unidadesBase];
+        pData.items.forEach(cat => cat.subitems.forEach(art => {
+            if (art.unidad && !unidadesDisponibles.includes(art.unidad)) unidadesDisponibles.push(art.unidad);
+        }));
         
         pData.items.forEach((cat, catIndex) => {
             let htmlArticulos = cat.subitems.map((art, artIndex) => `
@@ -138,8 +133,13 @@ document.addEventListener('DOMContentLoaded', async () => {
                     <td class="pr-2 pb-2"><input type="text" class="input-art w-full border border-zinc-300 bg-zinc-50 hover:bg-zinc-100 focus:bg-white focus:border-zinc-900 rounded p-1.5 text-sm transition-colors print:border-0 print:bg-transparent print:p-0" data-campo="descripcion" value="${art.descripcion || ''}" placeholder="Ej. Quillay"></td>
                     <td class="pr-2 pb-2"><input type="text" class="input-art w-full border border-zinc-300 bg-zinc-50 hover:bg-zinc-100 focus:bg-white focus:border-zinc-900 rounded p-1.5 text-sm transition-colors print:border-0 print:bg-transparent print:p-0" data-campo="detalle" value="${art.detalle || ''}" placeholder="Ej. 2 mts"></td>
                     <td class="pr-2 pb-2"><input type="text" inputmode="numeric" class="input-art w-full border border-zinc-300 bg-zinc-50 hover:bg-zinc-100 focus:bg-white focus:border-zinc-900 rounded p-1.5 text-sm text-center transition-colors print:border-0 print:bg-transparent print:p-0" data-campo="cantidad" value="${art.cantidad ? formatCLP(art.cantidad) : ''}"></td>
-                    <td class="pr-2 pb-2">
-                        <input type="text" list="lista-unidades" class="input-art w-full border border-zinc-300 bg-zinc-50 hover:bg-zinc-100 focus:bg-white focus:border-zinc-900 rounded p-1.5 text-sm transition-colors print:border-0 print:bg-transparent print:p-0" data-campo="unidad" value="${art.unidad || 'unid'}">
+                    <td class="pr-2 pb-2 relative">
+                        <input type="text" class="input-art input-unidad w-full border border-zinc-300 bg-zinc-50 hover:bg-zinc-100 focus:bg-white focus:border-zinc-900 rounded p-1.5 text-sm transition-colors print:border-0 print:bg-transparent print:p-0" data-campo="unidad" value="${art.unidad || 'unid'}">
+                        <div class="dropdown-unidad hidden absolute top-[calc(100%-8px)] left-0 w-24 bg-white border border-zinc-200 rounded-md shadow-lg z-50 overflow-hidden print:hidden">
+                            <div class="flex flex-col py-1 max-h-40 overflow-y-auto">
+                                ${unidadesDisponibles.map(u => `<button type="button" class="opcion-unidad text-left px-3 py-1.5 text-sm text-zinc-700 hover:bg-zinc-100 transition-colors" data-valor="${u}">${u}</button>`).join('')}
+                            </div>
+                        </div>
                     </td>
                     <td class="pr-2 pb-2 relative">
                         <span class="absolute left-3 top-2 text-zinc-400 print:hidden">$</span>
@@ -159,7 +159,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     <div class="font-bold text-lg text-zinc-900 mb-4 border-b-2 border-zinc-900 pb-1 flex justify-between items-end">
                         <div class="flex items-center flex-1 pr-4">
                             <span class="mr-2">${catIndex + 1}.</span>
-                            <input type="text" class="input-cat-titulo w-full bg-transparent border-0 p-0 font-bold text-lg focus:ring-0 ${isEditMode ? 'border-b border-dashed border-zinc-400 bg-zinc-50/50 cursor-text rounded-none' : 'pointer-events-none cursor-default'}" data-cat="${catIndex}" value="${cat.titulo}">
+                            <input type="text" class="input-cat-titulo w-full bg-transparent border-0 p-0 font-bold text-lg focus:ring-0 ${isEditMode ? 'border border-zinc-300 bg-zinc-50 cursor-text rounded-md px-2 py-1 -ml-2' : 'pointer-events-none cursor-default'}" data-cat="${catIndex}" value="${cat.titulo}">
                         </div>
                         <div class="flex items-center gap-4">
                             <div class="flex gap-1 print:hidden ${isEditMode ? '' : 'hidden'}">
@@ -167,20 +167,21 @@ document.addEventListener('DOMContentLoaded', async () => {
                                 <button class="btn-down-cat text-zinc-400 hover:text-zinc-800 p-1 disabled:opacity-30" data-cat="${catIndex}" ${catIndex === pData.items.length - 1 ? 'disabled' : ''}><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg></button>
                                 <button class="btn-del-cat text-red-400 hover:text-red-600 p-1 ml-2" data-cat="${catIndex}" title="Eliminar Ítem Completo"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg></button>
                             </div>
+                            <span class="text-sm font-bold text-zinc-600 cat-subtotal whitespace-nowrap">Subtotal: $${formatCLP(cat.subtotal)}</span>
                         </div>
                     </div>
                     
                     ${cat.subitems.length > 0 ? `
                         <div class="overflow-x-auto mb-3">
-                            <table class="w-full text-left">
+                            <table class="w-full text-left table-fixed">
                                 <thead>
                                     <tr class="text-xs text-zinc-500 uppercase tracking-wider">
-                                        <th class="pb-2 w-[30%]">Nombre</th>
-                                        <th class="pb-2 w-[25%]">Detalle</th>
+                                        <th class="pb-2 w-[28%] pl-1">Nombre</th>
+                                        <th class="pb-2 w-[28%]">Detalle</th>
                                         <th class="pb-2 w-[10%] text-center">Cant.</th>
                                         <th class="pb-2 w-[10%]">Unid.</th>
-                                        <th class="pb-2 w-[15%] text-right">P. Unit</th>
-                                        <th class="pb-2 w-[10%] text-right">Total</th>
+                                        <th class="pb-2 w-[12%] text-right">P. Unit</th>
+                                        <th class="pb-2 w-[12%] text-right pr-1">Total</th>
                                         <th class="pb-2 w-8 print:hidden ${isEditMode ? '' : 'hidden'}"></th>
                                     </tr>
                                 </thead>
@@ -238,13 +239,28 @@ document.addEventListener('DOMContentLoaded', async () => {
     async function guardarYRenderizar() {
         recalcularTotales();
         renderItems();
-        actualizarDatalistUnidades(); // Actualizar por si se añadieron unidades nuevas
         pData.fechaModificacion = new Date().toISOString();
         await localDB.presupuestos.put(pData);
     }
 
     // Delegación de eventos para botones dinámicos (Añadir, Eliminar, Reordenar)
     itemsContainer.addEventListener('click', (e) => {
+        const btnUnidad = e.target.closest('.opcion-unidad');
+        if (btnUnidad) {
+            const tr = btnUnidad.closest('tr');
+            const catIndex = tr.dataset.cat;
+            const artIndex = tr.dataset.art;
+            
+            pData.items[catIndex].subitems[artIndex].unidad = btnUnidad.dataset.valor;
+            guardarYRenderizar();
+            return;
+        }
+
+        if (e.target.classList.contains('input-unidad')) {
+            document.querySelectorAll('.dropdown-unidad').forEach(d => d.classList.add('hidden'));
+            e.target.nextElementSibling.classList.remove('hidden');
+        }
+
         const btnAdd = e.target.closest('.btn-add-art');
         const btnDelArt = e.target.closest('.btn-del-art');
         const btnDelCat = e.target.closest('.btn-del-cat');
