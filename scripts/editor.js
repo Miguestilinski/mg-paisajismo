@@ -139,7 +139,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                             <table class="w-full text-left">
                                 <thead>
                                     <tr class="text-xs text-zinc-500 uppercase tracking-wider">
-                                        <th class="pb-2 w-[30%]">Descripción</th>
+                                        <th class="pb-2 w-[30%]">Nombre</th>
                                         <th class="pb-2 w-[25%]">Detalle</th>
                                         <th class="pb-2 w-[10%] text-center">Cant.</th>
                                         <th class="pb-2 w-[10%]">Unid.</th>
