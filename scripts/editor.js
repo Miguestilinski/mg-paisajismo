@@ -19,6 +19,92 @@ document.addEventListener('DOMContentLoaded', async () => {
     const btnFechaHoy = document.getElementById('btn-fecha-hoy');
 
     // ==========================================
+    // SISTEMA DE MODALES CUSTOM
+    // ==========================================
+    window.customConfirm = function(title, message, okText = "Aceptar", okColorBase = "bg-red-500", okColorHover = "hover:bg-red-600") {
+        return new Promise((resolve) => {
+            const modal = document.getElementById('modal-confirm');
+            const box = document.getElementById('modal-confirm-box');
+            const btnOk = document.getElementById('btn-modal-confirm-ok');
+            const btnCancel = document.getElementById('btn-modal-confirm-cancel');
+
+            document.getElementById('modal-confirm-title').textContent = title;
+            document.getElementById('modal-confirm-message').innerHTML = message;
+            
+            btnOk.textContent = okText;
+            btnOk.className = `px-4 py-2 rounded-lg font-bold text-white transition-colors shadow-sm ${okColorBase} ${okColorHover}`;
+
+            const cleanup = () => {
+                box.classList.remove('scale-100');
+                box.classList.add('scale-95');
+                modal.classList.remove('opacity-100');
+                modal.classList.add('opacity-0');
+                setTimeout(() => modal.classList.add('hidden'), 200);
+                btnOk.removeEventListener('click', onOk);
+                btnCancel.removeEventListener('click', onCancel);
+            };
+
+            const onOk = () => { cleanup(); resolve(true); };
+            const onCancel = () => { cleanup(); resolve(false); };
+
+            btnOk.addEventListener('click', onOk);
+            btnCancel.addEventListener('click', onCancel);
+
+            modal.classList.remove('hidden');
+            // Timeout para que la animación de Tailwind agarre
+            setTimeout(() => {
+                modal.classList.remove('opacity-0');
+                modal.classList.add('opacity-100');
+                box.classList.remove('scale-95');
+                box.classList.add('scale-100');
+            }, 10);
+        });
+    };
+
+    window.customPrompt = function(title, message, placeholder) {
+        return new Promise((resolve) => {
+            const modal = document.getElementById('modal-prompt');
+            const box = document.getElementById('modal-prompt-box');
+            const input = document.getElementById('modal-prompt-input');
+            const btnOk = document.getElementById('btn-modal-prompt-ok');
+            const btnCancel = document.getElementById('btn-modal-prompt-cancel');
+
+            document.getElementById('modal-prompt-title').textContent = title;
+            document.getElementById('modal-prompt-message').textContent = message;
+            input.placeholder = placeholder;
+            input.value = '';
+
+            const cleanup = () => {
+                box.classList.remove('scale-100');
+                box.classList.add('scale-95');
+                modal.classList.remove('opacity-100');
+                modal.classList.add('opacity-0');
+                setTimeout(() => modal.classList.add('hidden'), 200);
+                btnOk.removeEventListener('click', onOk);
+                btnCancel.removeEventListener('click', onCancel);
+                input.removeEventListener('keydown', onKey);
+            };
+
+            const onOk = () => { cleanup(); resolve(input.value.trim()); };
+            const onCancel = () => { cleanup(); resolve(null); };
+            const onKey = (e) => { if (e.key === 'Enter') onOk(); if (e.key === 'Escape') onCancel(); };
+
+            btnOk.addEventListener('click', onOk);
+            btnCancel.addEventListener('click', onCancel);
+            input.addEventListener('keydown', onKey);
+
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                modal.classList.remove('opacity-0');
+                modal.classList.add('opacity-100');
+                box.classList.remove('scale-95');
+                box.classList.add('scale-100');
+                input.focus();
+            }, 10);
+        });
+    };
+
+    // ==========================================
     // ESTADO GLOBAL EN MEMORIA
     // ==========================================
     let pData = await localDB.presupuestos.get(id) || {};
@@ -174,7 +260,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     renderizarRioVersiones(pData.historialVersiones, restaurarVersion);
 
     document.getElementById('btn-guardar-version').addEventListener('click', async () => {
-        const etiqueta = prompt("Nombre de esta versión (Ej: Opción sin pileta):");
+        const etiqueta = await window.customPrompt(
+            "Guardar Versión", 
+            "Ingresa un nombre para recordar este punto:", 
+            "Ej: Opción sin juegos infantiles"
+        );
+        
         if (etiqueta === null) return; // Canceló
 
         const nuevaVersion = {
@@ -425,10 +516,18 @@ document.addEventListener('DOMContentLoaded', async () => {
             guardarYRenderizar();
         } else if (btnDelCat) {
             const cIdx = parseInt(btnDelCat.dataset.cat);
-            if (confirm(`¿Seguro que deseas eliminar el ítem "${pData.items[cIdx].titulo}" y todos sus artículos?`)) {
-                pData.items.splice(cIdx, 1);
-                guardarYRenderizar();
-            }
+            window.customConfirm(
+                "Eliminar Ítem",
+                `¿Seguro que deseas eliminar el ítem <b>"${pData.items[cIdx].titulo}"</b> y todos sus artículos?`,
+                "Sí, eliminar",
+                "bg-red-500",
+                "hover:bg-red-600"
+            ).then((confirmed) => {
+                if (confirmed) {
+                    pData.items.splice(cIdx, 1);
+                    guardarYRenderizar();
+                }
+            });
         } else if (btnUpCat) {
             const cIdx = parseInt(btnUpCat.dataset.cat);
             if (cIdx > 0) {

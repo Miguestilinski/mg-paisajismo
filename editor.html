@@ -186,6 +186,32 @@
         </aside>
     </div>
 
+    <!-- ================= MODALES CUSTOM ================= -->
+    <!-- Modal Confirmación -->
+    <div id="modal-confirm" class="fixed inset-0 z-50 flex items-center justify-center hidden bg-zinc-900/40 backdrop-blur-sm print:hidden opacity-0 transition-opacity duration-200">
+        <div class="bg-white/95 backdrop-blur-md border border-white/50 shadow-2xl rounded-2xl p-6 max-w-sm w-full mx-4 transform scale-95 transition-transform duration-200" id="modal-confirm-box">
+            <h3 class="text-lg font-bold text-zinc-900 mb-2" id="modal-confirm-title">Confirmar</h3>
+            <p class="text-zinc-600 mb-6 text-sm" id="modal-confirm-message">¿Estás seguro de continuar?</p>
+            <div class="flex justify-end gap-3">
+                <button id="btn-modal-confirm-cancel" class="px-4 py-2 rounded-lg font-medium text-zinc-600 hover:bg-zinc-100 transition-colors">Cancelar</button>
+                <button id="btn-modal-confirm-ok" class="px-4 py-2 rounded-lg font-bold text-white bg-red-500 hover:bg-red-600 transition-colors shadow-sm">Sí, eliminar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Prompt (Ingreso de texto) -->
+    <div id="modal-prompt" class="fixed inset-0 z-50 flex items-center justify-center hidden bg-zinc-900/40 backdrop-blur-sm print:hidden opacity-0 transition-opacity duration-200">
+        <div class="bg-white/95 backdrop-blur-md border border-white/50 shadow-2xl rounded-2xl p-6 max-w-md w-full mx-4 transform scale-95 transition-transform duration-200" id="modal-prompt-box">
+            <h3 class="text-lg font-bold text-zinc-900 mb-2" id="modal-prompt-title">Nombre de la Versión</h3>
+            <p class="text-zinc-600 mb-4 text-sm" id="modal-prompt-message">Ingresa un nombre para recordar este punto:</p>
+            <input type="text" id="modal-prompt-input" class="w-full border border-zinc-300 bg-zinc-50 focus:bg-white focus:border-zinc-900 focus:ring-2 focus:ring-zinc-900 rounded-lg p-2.5 mb-6 text-sm transition-colors" placeholder="Ej: Opción sin juegos infantiles">
+            <div class="flex justify-end gap-3">
+                <button id="btn-modal-prompt-cancel" class="px-4 py-2 rounded-lg font-medium text-zinc-600 hover:bg-zinc-100 transition-colors">Cancelar</button>
+                <button id="btn-modal-prompt-ok" class="px-4 py-2 rounded-lg font-bold text-white bg-zinc-900 hover:bg-zinc-800 transition-colors shadow-sm">Guardar Versión</button>
+            </div>
+        </div>
+    </div>
+
     <script src="https://unpkg.com/dexie/dist/dexie.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     <script src="https://npmcdn.com/flatpickr/dist/l10n/es.js"></script>

@@ -34,9 +34,16 @@ export function renderizarRioVersiones(versiones, onRestoreCallback) {
         `;
 
         nodoHtml.addEventListener('click', () => {
-            if (confirm(`¿Restaurar la versión "${ver.etiqueta}" de las ${formatearHora(ver.fechaHora)}?\n\nLos cambios actuales no guardados se perderán.`)) {
-                onRestoreCallback(ver.snapshot);
-            }
+            // Llamamos a la función asíncrona del Modal Custom inyectada desde editor.js
+            window.customConfirm(
+                "Restaurar Versión", 
+                `¿Restaurar la versión "${ver.etiqueta}" de las ${formatearHora(ver.fechaHora)}?<br><br>Los cambios actuales no guardados se perderán.`,
+                "Sí, restaurar",
+                "bg-blue-600",
+                "hover:bg-blue-700"
+            ).then((confirmed) => {
+                if(confirmed) onRestoreCallback(ver.snapshot);
+            });
         });
 
         contenedor.appendChild(nodoHtml);
