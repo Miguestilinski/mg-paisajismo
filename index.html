@@ -38,20 +38,46 @@
                     </div>
                 </header>
 
-                <div class="bg-white/90 rounded-xl shadow-sm border border-zinc-200/50 overflow-hidden">
-                    <table class="w-full text-left border-collapse">
-                        <thead>
-                            <tr class="bg-zinc-100/80 text-zinc-600 uppercase text-xs font-bold tracking-wider">
-                                <th class="p-5 border-b border-zinc-200">Fecha</th>
-                                <th class="p-5 border-b border-zinc-200">Proyecto / Constructora</th>
-                                <th class="p-5 border-b border-zinc-200">Total Neto</th>
-                                <th class="p-5 border-b border-zinc-200 text-right">Acción</th>
-                            </tr>
-                        </thead>
-                        <tbody id="lista-presupuestos">
-                            <!-- Los presupuestos se cargarán dinámicamente desde app.js -->
-                        </tbody>
-                    </table>
+                <div class="bg-white/90 rounded-xl shadow-sm border border-zinc-200/50 overflow-hidden flex flex-col">
+                    
+                    <!-- Barra de Filtros -->
+                    <div class="p-4 border-b border-zinc-200/80 bg-zinc-50/50 flex gap-4 items-center">
+                        <div class="relative flex-1">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <svg class="w-5 h-5 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                            </div>
+                            <input type="text" id="filtro-texto" class="block w-full pl-10 pr-3 py-2 border border-zinc-300 rounded-lg leading-5 bg-white placeholder-zinc-400 focus:outline-none focus:ring-1 focus:ring-zinc-900 focus:border-zinc-900 sm:text-sm transition-colors" placeholder="Buscar por proyecto o constructora...">
+                        </div>
+                        <div class="w-64 relative">
+                            <!-- El input de fecha será manejado por Flatpickr -->
+                            <input type="text" id="filtro-fecha" class="block w-full px-3 py-2 border border-zinc-300 rounded-lg leading-5 bg-white placeholder-zinc-400 focus:outline-none focus:ring-1 focus:ring-zinc-900 focus:border-zinc-900 sm:text-sm transition-colors cursor-pointer" placeholder="Filtrar por fecha...">
+                            <button id="btn-limpiar-fecha" class="absolute inset-y-0 right-0 pr-3 flex items-center text-zinc-400 hover:text-red-500 hidden transition-colors">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Tabla Contenedor Scrollable -->
+                    <div class="overflow-y-auto max-h-[500px]">
+                        <table class="w-full text-left border-collapse relative">
+                            <thead class="sticky top-0 bg-zinc-100/95 backdrop-blur-sm z-10 shadow-sm text-zinc-600 uppercase text-xs font-bold tracking-wider">
+                                <tr>
+                                    <th class="p-5 border-b border-zinc-200">Fecha</th>
+                                    <th class="p-5 border-b border-zinc-200">Proyecto / Constructora</th>
+                                    <th class="p-5 border-b border-zinc-200">Total Neto</th>
+                                    <th class="p-5 border-b border-zinc-200 text-right">Acción</th>
+                                </tr>
+                            </thead>
+                            <tbody id="lista-presupuestos" class="bg-white">
+                                <!-- Los presupuestos se cargarán dinámicamente desde app.js -->
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <!-- Footer Info -->
+                    <div class="p-3 border-t border-zinc-200 bg-zinc-50/80 text-xs text-zinc-500 font-medium px-5">
+                        <span id="contador-resultados">Mostrando 0 resultados</span>
+                    </div>
                 </div>
             </div>
         </div>

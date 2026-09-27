@@ -83,7 +83,46 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const btnNuevo = document.getElementById('btn-nuevo-presupuesto');
     const btnToggleEdicionGlobal = document.getElementById('btn-toggle-edicion-global');
+    const inputFiltroTexto = document.getElementById('filtro-texto');
+    const inputFiltroFecha = document.getElementById('filtro-fecha');
+    const btnLimpiarFecha = document.getElementById('btn-limpiar-fecha');
+    const contadorResultados = document.getElementById('contador-resultados');
+    
     let isGlobalEditMode = false;
+    let presupuestosMemoria = []; // Aquí guardaremos los presupuestos válidos tras la limpieza
+    let filtroTexto = "";
+    let filtroFechaSeleccionada = null; // Guardará el objeto Date si se selecciona
+
+    // Inicializar Flatpickr para el filtro de fechas
+    const fpFiltro = flatpickr(inputFiltroFecha, {
+        locale: "es",
+        dateFormat: "Y-m-d",
+        altInput: true,
+        altFormat: "d M Y", 
+        allowInput: false,
+        onChange: function(selectedDates, dateStr, instance) {
+            if (selectedDates.length > 0) {
+                filtroFechaSeleccionada = selectedDates[0];
+                btnLimpiarFecha.classList.remove('hidden');
+            } else {
+                filtroFechaSeleccionada = null;
+                btnLimpiarFecha.classList.add('hidden');
+            }
+            renderizarTablaFiltrada();
+        }
+    });
+
+    btnLimpiarFecha.addEventListener('click', () => {
+        fpFiltro.clear();
+        filtroFechaSeleccionada = null;
+        btnLimpiarFecha.classList.add('hidden');
+        renderizarTablaFiltrada();
+    });
+
+    inputFiltroTexto.addEventListener('input', (e) => {
+        filtroTexto = e.target.value.toLowerCase();
+        renderizarTablaFiltrada();
+    });
 
     btnToggleEdicionGlobal.addEventListener('click', () => {
         isGlobalEditMode = !isGlobalEditMode;
@@ -118,17 +157,12 @@ document.addEventListener('DOMContentLoaded', () => {
         window.location.href = `editor.html?id=${presupuestoActualId}`;
     });
 
-    // Función para renderizar la lista de presupuestos
+    // Carga inicial y auto-limpieza
     async function cargarPresupuestos() {
-        const lista = document.getElementById('lista-presupuestos');
-        lista.innerHTML = ''; // Limpiar lista
-
-        // Obtener todos los presupuestos de la base de datos local
-        let presupuestosRaw = await localDB.presupuestos.toArray();
-        
-        // --- GARBAGE COLLECTION (Auto-limpieza) ---
-        // Filtrar y eliminar silenciosamente los proyectos que se crearon pero quedaron 100% vacíos
+        const presupuestosRaw = await localDB.presupuestos.toArray();
         const presupuestosValidos = [];
+        
+        // --- GARBAGE COLLECTION ---
         for (const p of presupuestosRaw) {
             const isVacio = (!p.cliente?.destinatario && 
                              !p.cliente?.constructora && 
@@ -136,19 +170,46 @@ document.addEventListener('DOMContentLoaded', () => {
                              (!p.items || p.items.length === 0));
             
             if (isVacio) {
-                // Eliminar de la base de datos el "cascarón" vacío
                 await localDB.presupuestos.delete(p.id);
             } else {
                 presupuestosValidos.push(p);
             }
         }
 
-        // Usar solo los válidos y ordenar por fecha de modificación (Más recientes arriba)
-        let presupuestos = presupuestosValidos;
-        presupuestos.sort((a, b) => new Date(b.fechaModificacion) - new Date(a.fechaModificacion));
+        // Ordenamos por modificación (Más recientes arriba)
+        presupuestosMemoria = presupuestosValidos.sort((a, b) => new Date(b.fechaModificacion) - new Date(a.fechaModificacion));
+        renderizarTablaFiltrada();
+    }
 
-        if (presupuestos.length === 0) {
-            lista.innerHTML = `<tr><td colspan="4" class="p-10 text-center text-zinc-500 font-medium">Aún no tienes presupuestos creados. ¡Comienza uno nuevo!</td></tr>`;
+    // Renderizar la tabla aplicando filtros
+    function renderizarTablaFiltrada() {
+        const lista = document.getElementById('lista-presupuestos');
+        lista.innerHTML = ''; 
+
+        // Filtrado
+        const presupuestosFiltrados = presupuestosMemoria.filter(p => {
+            // Filtro Texto
+            const matchTexto = !filtroTexto || 
+                (p.codigoProyecto && p.codigoProyecto.toLowerCase().includes(filtroTexto)) || 
+                (p.cliente?.constructora && p.cliente.constructora.toLowerCase().includes(filtroTexto));
+            
+            // Filtro Fecha (Compara ignorando la hora)
+            let matchFecha = true;
+            if (filtroFechaSeleccionada) {
+                const fMod = new Date(p.fechaModificacion);
+                matchFecha = fMod.getFullYear() === filtroFechaSeleccionada.getFullYear() &&
+                             fMod.getMonth() === filtroFechaSeleccionada.getMonth() &&
+                             fMod.getDate() === filtroFechaSeleccionada.getDate();
+            }
+
+            return matchTexto && matchFecha;
+        });
+
+        // Actualizar contador
+        contadorResultados.textContent = `Mostrando ${presupuestosFiltrados.length} resultado${presupuestosFiltrados.length !== 1 ? 's' : ''}`;
+
+        if (presupuestosFiltrados.length === 0) {
+            lista.innerHTML = `<tr><td colspan="4" class="p-10 text-center text-zinc-500 font-medium">No se encontraron proyectos.</td></tr>`;
             return;
         }
 
@@ -159,15 +220,11 @@ document.addEventListener('DOMContentLoaded', () => {
             return `${date.getDate()} ${meses[date.getMonth()]} ${date.getFullYear()}`;
         };
 
-        presupuestos.forEach(p => {
+        presupuestosFiltrados.forEach(p => {
             const tr = document.createElement('tr');
-            // Si está en modo edición, quitamos el cursor-pointer para que sepa que la fila completa ya no abre el editor
             tr.className = `hover:bg-zinc-50/80 transition-colors group border-b border-zinc-100 ${!isGlobalEditMode ? 'cursor-pointer' : ''}`;
 
-            // Lógica de Badges (Actualmente todos son locales, la lógica Nube se completará con Firebase)
             const badgeLocal = `<span class="bg-zinc-200 text-zinc-700 text-[10px] font-bold px-2 py-0.5 rounded-full inline-flex items-center gap-1 shadow-sm"><svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z"></path></svg> Local</span>`;
-            
-            // Ejemplo: si existiera un campo cloudId, mostramos el badge
             const badgeNube = p.cloudId ? `<span class="bg-blue-100 text-blue-700 text-[10px] font-bold px-2 py-0.5 rounded-full inline-flex items-center gap-1 shadow-sm"><svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path></svg> Nube</span>` : '';
 
             const nombreProyecto = p.codigoProyecto && p.codigoProyecto !== "Nuevo Proyecto" ? p.codigoProyecto : "Proyecto sin nombre";
@@ -207,7 +264,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 </td>
             `;
 
-            // Navegar al editor SOLO si NO estamos en el modo edición global
             tr.addEventListener('click', (e) => {
                 if (isGlobalEditMode) return;
                 if (e.target.closest('button')) return;
