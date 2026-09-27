@@ -280,40 +280,18 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     // ==========================================
-    // MODO VISTA PREVIA (TOAST Y ESTADO)
+    // MODO VISTA PREVIA Y ESTADO
     // ==========================================
     const barraVistaPrevia = document.getElementById('barra-vista-previa');
     const barraHerramientas = document.getElementById('barra-herramientas-principal'); 
     const lblVistaPreviaTexto = document.getElementById('lbl-vista-previa-texto');
     const btnCancelarVP = document.getElementById('btn-cancelar-vista-previa');
     const btnRestaurarVP = document.getElementById('btn-restaurar-vista-previa');
+    const hojaPresupuesto = document.getElementById('hoja-presupuesto');
     
     let enModoVistaPrevia = false;
     let backupPDataTemporal = null; // Guarda el presente
     let versionEnVistaPrevia = null; // Guarda los metadatos de lo que estamos viendo
-
-    // Aplica o remueve clases "readonly" a todos los inputs (estilo PDF)
-    const toggleReadOnlyUI = (readOnly) => {
-        const inputs = document.querySelectorAll('#hoja-presupuesto input, #hoja-presupuesto textarea');
-        inputs.forEach(input => {
-            input.readOnly = readOnly;
-            if (readOnly) {
-                input.classList.add('pointer-events-none', 'bg-transparent', 'border-transparent');
-                input.classList.remove('border-zinc-300', 'bg-zinc-50', 'hover:bg-zinc-100');
-            } else {
-                input.classList.remove('pointer-events-none', 'bg-transparent', 'border-transparent');
-                input.classList.add('border-zinc-300', 'bg-zinc-50', 'hover:bg-zinc-100');
-            }
-        });
-        
-        // Ocultar botones de edición estructural
-        const editButtons = document.querySelectorAll('.print\\:hidden, #btn-toggle-edit');
-        editButtons.forEach(btn => {
-            if (btn.closest('#barra-vista-previa')) return; // No ocultar la barra de VP
-            if (readOnly) btn.style.display = 'none';
-            else btn.style.display = '';
-        });
-    };
 
     const salirModoVistaPrevia = async () => {
         enModoVistaPrevia = false;
@@ -323,16 +301,18 @@ document.addEventListener('DOMContentLoaded', async () => {
         
         if (barraHerramientas) {
             barraHerramientas.classList.remove('hidden');
+            barraHerramientas.classList.add('flex');
         }
         if (barraVistaPrevia) {
             barraVistaPrevia.classList.add('hidden');
+            barraVistaPrevia.classList.remove('flex');
         }
         
-        toggleReadOnlyUI(false);
+        hojaPresupuesto.classList.remove('modo-vista-previa');
         await guardarYRenderizar();
     };
 
-    // Recibe isExitIntent=true cuando se hace clic en el "Fantasma" para salir
+    // Recibe isExitIntent=true cuando se hace clic en el "Fantasma" o "Actual" para salir
     const restaurarVersion = async (snapshot, versionMeta, isExitIntent = false) => {
         if (isExitIntent) {
             salirModoVistaPrevia();
@@ -347,9 +327,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         enModoVistaPrevia = true;
         versionEnVistaPrevia = versionMeta;
         
-        // Alternar barras
+        // Mostrar Barra de Alerta y ocultar barra superior
         if (barraHerramientas) {
             barraHerramientas.classList.add('hidden');
+            barraHerramientas.classList.remove('flex');
         }
         if (barraVistaPrevia) {
             barraVistaPrevia.classList.remove('hidden');
@@ -378,11 +359,14 @@ document.addEventListener('DOMContentLoaded', async () => {
             actualizarFechaImpresa(pData.cliente.fecha);
         }
         recalcularTotales();
-        renderItemsHTML(pData, false); // Forzamos isEditMode false
-        toggleReadOnlyUI(true);
+        renderItemsHTML(pData, false); // Forzamos EditMode false visualmente
+        hojaPresupuesto.classList.add('modo-vista-previa');
         
-        // Forzamos "mostrarFantasma = true" para que siempre esté el botón "Actual" al estar en VP
-        renderizarRioVersiones(pData.historialVersiones, restaurarVersion, true, backupPDataTemporal, versionEnVistaPrevia.versionId);
+        // Determinamos si hay cambios reales en el borrador para saber si renderizar con fantasma
+        const stringifyParaComparar = (data) => JSON.stringify({ cliente: data.cliente || {}, codigoProyecto: data.codigoProyecto || "", encabezadoTexto: data.encabezadoTexto || "", items: data.items || [], totales: data.totales || {} });
+        const hayCambiosEnBorrador = stringifyParaComparar(backupPDataTemporal) !== stringifyParaComparar(backupPDataTemporal.historialVersiones[backupPDataTemporal.historialVersiones.length - 1]?.snapshot || {});
+
+        renderizarRioVersiones(pData.historialVersiones, restaurarVersion, hayCambiosEnBorrador, backupPDataTemporal, versionEnVistaPrevia.versionId);
     };
 
     btnCancelarVP.addEventListener('click', salirModoVistaPrevia);
@@ -400,9 +384,15 @@ document.addEventListener('DOMContentLoaded', async () => {
         backupPDataTemporal = null;
         versionEnVistaPrevia = null;
         
-        barraHerramientas.classList.remove('opacity-0', 'pointer-events-none', '-translate-y-4');
-        toastVistaPrevia.classList.add('translate-y-24', 'opacity-0');
-        toastVistaPrevia.classList.remove('translate-y-0', 'opacity-100');
+        if (barraHerramientas) {
+            barraHerramientas.classList.remove('hidden');
+            barraHerramientas.classList.add('flex');
+        }
+        if (barraVistaPrevia) {
+            barraVistaPrevia.classList.add('hidden');
+            barraVistaPrevia.classList.remove('flex');
+        }
+        hojaPresupuesto.classList.remove('modo-vista-previa');
         
         await guardarYRenderizar();
     });
