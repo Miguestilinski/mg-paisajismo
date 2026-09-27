@@ -152,7 +152,7 @@ function procesarDatos(texto, pData, guardarCallback) {
         const numCol2 = cols.length > 2 ? parseNum(cols[2]) : NaN;
 
         // Formato 1 (Documento Word de la Moni): Cantidad | Unidad | Descripcion | Precio | Total
-        if (!isNaN(numCol0) && cols.length >= 3 && isNaN(parseNum(cols[1]))) {
+        if (!isNaN(numCol0) && numCol0 > 0 && cols.length >= 3 && isNaN(parseNum(cols[1]))) {
             art = {
                 descripcion: cols[2] || '',
                 detalle: '',
@@ -163,7 +163,7 @@ function procesarDatos(texto, pData, guardarCallback) {
             };
         } 
         // Formato 2 (Excel Estándar App): Descripcion | Detalle | Cantidad | Unidad | Precio | Total
-        else if (!isNaN(numCol2) && isNaN(numCol0) && cols.length >= 4) {
+        else if (!isNaN(numCol2) && numCol2 > 0 && isNaN(numCol0) && cols.length >= 4) {
             art = {
                 descripcion: cols[0] || '',
                 detalle: cols[1] || '',
@@ -174,8 +174,8 @@ function procesarDatos(texto, pData, guardarCallback) {
             };
         }
 
-        // Si detectamos un ítem válido
-        if (art && !/nombre|descripci[óo]n/i.test(art.descripcion)) {
+        // Si detectamos un ítem válido (que tenga nombre real y precio/cantidad > 0)
+        if (art && art.descripcion.trim().length > 2 && !/nombre|descripci[óo]n/i.test(art.descripcion)) {
             // Iniciar nueva categoría si teníamos un título pendiente
             if (tituloPendiente && categoriaActual.subitems.length > 0) {
                 categoriasImportadas.push(categoriaActual);
@@ -195,21 +195,42 @@ function procesarDatos(texto, pData, guardarCallback) {
     }
 
     if (categoriasImportadas.length > 0) {
-        categoriasImportadas.forEach(cat => {
-            pData.items.push({
-                id: 'cat_import_' + Date.now() + Math.random().toString(36).substring(2, 6),
-                titulo: cat.titulo,
-                modo: 'simple', 
-                subitems: cat.subitems,
-                subgrupos: [],
-                subtotal: 0
-            });
+        let itemsAñadidos = 0;
+        
+        categoriasImportadas.forEach(catImport => {
+            // Buscar si ya existe una categoría con ese nombre exacto en el editor
+            const catExistenteIndex = pData.items.findIndex(c => c.titulo.toUpperCase().trim() === catImport.titulo.trim());
+            
+            if (catExistenteIndex !== -1) {
+                // Existe, fusionar elementos si está en modo simple (si es compuesto, por ahora la forzamos a simple o creamos nueva, pero asumimos simple por defecto para importar)
+                if(!pData.items[catExistenteIndex].modo || pData.items[catExistenteIndex].modo === 'simple') {
+                    pData.items[catExistenteIndex].subitems.push(...catImport.subitems);
+                } else {
+                    // Si es compuesto, creamos un subgrupo temporal llamado "Importados"
+                    pData.items[catExistenteIndex].subgrupos.push({
+                        id: 'sub_import_' + Date.now(),
+                        tituloSubgrupo: "Importados",
+                        subitems: catImport.subitems,
+                        subtotal: 0
+                    });
+                }
+            } else {
+                // No existe, crear nueva categoría al final
+                pData.items.push({
+                    id: 'cat_import_' + Date.now() + Math.random().toString(36).substring(2, 6),
+                    titulo: catImport.titulo,
+                    modo: 'simple', 
+                    subitems: catImport.subitems,
+                    subgrupos: [],
+                    subtotal: 0
+                });
+            }
+            itemsAñadidos += catImport.subitems.length;
         });
         
-        const totalItems = categoriasImportadas.reduce((sum, cat) => sum + cat.subitems.length, 0);
-        window.customAlert("Importación Exitosa", `Se extrajeron <b>${totalItems} elementos</b> organizados automáticamente en <b>${categoriasImportadas.length} categorías</b>.`, "bg-emerald-500", "hover:bg-emerald-600");
+        window.customAlert("Importación Exitosa", `Se extrajeron <b>${itemsAñadidos} elementos</b>. Se fusionaron inteligentemente en las categorías correspondientes.`, "bg-emerald-500", "hover:bg-emerald-600");
         guardarCallback();
     } else {
-        window.customAlert("Atención", "No se detectaron elementos con formato de presupuesto (Cantidad, Unidad, Nombre, Precio) en el documento.", "bg-amber-500", "hover:bg-amber-600");
+        window.customAlert("Atención", "No se detectaron elementos con formato de presupuesto (Cantidad > 0, Nombre, Precio) en el documento.", "bg-amber-500", "hover:bg-amber-600");
     }
 }

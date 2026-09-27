@@ -274,10 +274,41 @@ document.addEventListener('DOMContentLoaded', async () => {
         timeoutGuardado = setTimeout(indicarGuardadoOK, 800);
     }
 
-    const restaurarVersion = async (snapshot) => {
-        pData = JSON.parse(JSON.stringify(snapshot));
-        pData.fechaModificacion = new Date().toISOString();
+    // ==========================================
+    // MODO VISTA PREVIA
+    // ==========================================
+    const barraVistaPrevia = document.getElementById('barra-vista-previa');
+    const barraHerramientas = document.getElementById('barra-herramientas-principal');
+    const lblVistaPreviaTexto = document.getElementById('lbl-vista-previa-texto');
+    const btnCancelarVP = document.getElementById('btn-cancelar-vista-previa');
+    const btnRestaurarVP = document.getElementById('btn-restaurar-vista-previa');
+    
+    let enModoVistaPrevia = false;
+    let backupPDataTemporal = null; // Guarda el presente
+    let versionEnVistaPrevia = null; // Guarda los metadatos de lo que estamos viendo
+
+    const restaurarVersion = async (snapshot, versionMeta) => {
+        // Si no estábamos en vista previa, guardamos el presente
+        if (!enModoVistaPrevia) {
+            backupPDataTemporal = JSON.parse(JSON.stringify(pData));
+        }
+
+        enModoVistaPrevia = true;
+        versionEnVistaPrevia = versionMeta;
         
+        // Bloquear UI visualmente
+        barraHerramientas.classList.add('opacity-0', 'pointer-events-none', '-translate-y-4');
+        barraVistaPrevia.classList.remove('hidden');
+        lblVistaPreviaTexto.textContent = `Viendo: ${versionMeta.etiqueta || 'Versión antigua'} (Se generó un backup del borrador actual)`;
+        
+        // Inyectar datos en pantalla (sin guardar a la base de datos)
+        pData = JSON.parse(JSON.stringify(snapshot));
+        pData.historialVersiones = backupPDataTemporal.historialVersiones; // Mantenemos el historial real
+        
+        renderTodoSinGuardar();
+    };
+
+    const renderTodoSinGuardar = () => {
         inputDestinatario.value = pData.cliente.destinatario || '';
         inputConstructora.value = pData.cliente.constructora || '';
         inputProyecto.value = pData.codigoProyecto || '';
@@ -289,8 +320,38 @@ document.addEventListener('DOMContentLoaded', async () => {
             fp.setDate(pData.cliente.fecha, false);
             actualizarFechaImpresa(pData.cliente.fecha);
         }
-        await guardarYRenderizar(); 
+        recalcularTotales();
+        renderItemsHTML(pData, isEditMode);
     };
+
+    btnCancelarVP.addEventListener('click', () => {
+        enModoVistaPrevia = false;
+        pData = backupPDataTemporal;
+        backupPDataTemporal = null;
+        
+        barraHerramientas.classList.remove('opacity-0', 'pointer-events-none', '-translate-y-4');
+        barraVistaPrevia.classList.add('hidden');
+        
+        guardarYRenderizar();
+    });
+
+    btnRestaurarVP.addEventListener('click', async () => {
+        // Al restaurar, avanzamos en el tiempo creando un nuevo nodo basado en la vista previa
+        pData.historialVersiones.push({
+            versionId: `v_restored_${Date.now()}`,
+            fechaHora: new Date().toISOString(),
+            etiqueta: `Restaurado de: ${versionEnVistaPrevia.etiqueta}`,
+            snapshot: JSON.parse(JSON.stringify(pData)) 
+        });
+
+        enModoVistaPrevia = false;
+        backupPDataTemporal = null;
+        
+        barraHerramientas.classList.remove('opacity-0', 'pointer-events-none', '-translate-y-4');
+        barraVistaPrevia.classList.add('hidden');
+        
+        await guardarYRenderizar();
+    });
 
     // ==========================================
     // DELEGACIÓN DE EVENTOS (INTERACCIÓN USUARIO)
@@ -525,8 +586,19 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     });
 
+    // Bloquear edición si estamos en vista previa
+    itemsContainer.addEventListener('click', (e) => {
+        if (enModoVistaPrevia) {
+            e.stopPropagation();
+            window.customAlert("Modo Vista Previa", "No puedes editar mientras visualizas una versión antigua. Vuelve al borrador o restaura la versión.", "bg-amber-600", "hover:bg-amber-700");
+            return;
+        }
+    }, true);
+
     // Inputs en la tabla (Montos, nombres, detalles)
     itemsContainer.addEventListener('input', (e) => {
+        if (enModoVistaPrevia) return;
+
         if (e.target.classList.contains('input-cat-titulo')) {
             pData.items[e.target.dataset.cat].titulo = e.target.value;
             guardarSilencioso();

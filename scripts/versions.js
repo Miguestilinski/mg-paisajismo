@@ -68,24 +68,15 @@ export function renderizarRioVersiones(versiones, onRestoreCallback, mostrarFant
             const isIdentical = pDataActual && (stringifyParaComparar(ver.snapshot) === stringifyParaComparar(pDataActual));
 
             if (isIdentical) {
-                // Alerta nativa a través del modal custom si no hay cambios
                 window.customAlert(
                     "Versión Actual", 
-                    "Ya estás visualizando esta versión. No hay cambios pendientes que restaurar.",
+                    "Ya estás visualizando esta versión o su contenido exacto.",
                     "bg-zinc-800",
                     "hover:bg-zinc-900"
                 );
             } else {
-                // Confirmación para sobreescribir borrador si hay cambios
-                window.customConfirm(
-                    "Restaurar Versión", 
-                    `¿Restaurar la versión <b>"${ver.etiqueta}"</b> de las ${formatearHora(ver.fechaHora)}?<br><br>Cualquier modificación actual que no hayas guardado se perderá.`,
-                    "Sí, restaurar",
-                    "bg-blue-600",
-                    "hover:bg-blue-700"
-                ).then((confirmed) => {
-                    if(confirmed) onRestoreCallback(ver.snapshot);
-                });
+                // Dispara el callback pero en Modo Vista Previa
+                onRestoreCallback(ver.snapshot, ver);
             }
         });
 
