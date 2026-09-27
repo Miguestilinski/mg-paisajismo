@@ -507,7 +507,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             const catHtml = `
                 <div class="mb-8 relative print:break-inside-avoid" data-cat-index="${catIndex}">
-                    <div class="font-bold text-lg text-zinc-900 mb-4 border-b-2 border-zinc-900 pb-1 flex justify-between items-end">
+                    <div class="font-bold text-lg text-zinc-900 mb-2 border-b-2 border-zinc-900 pb-1 flex justify-between items-end">
                         <div class="flex items-center flex-1 pr-4">
                             <span class="mr-2">${catIndex + 1}.</span>
                             <input type="text" class="input-cat-titulo w-full bg-transparent border-0 p-0 font-bold text-lg focus:ring-0 ${isEditMode ? 'border border-zinc-300 bg-zinc-50 cursor-text rounded-md px-2 py-1 -ml-2' : 'pointer-events-none cursor-default'}" data-cat="${catIndex}" value="${cat.titulo}">
@@ -525,7 +525,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                         <div class="mb-3">
                             <table class="w-full text-left table-fixed">
                                 <thead>
-                                    <tr class="text-xs text-zinc-800 font-extrabold uppercase tracking-wider border-b-2 border-zinc-800">
+                                    <tr class="text-xs text-zinc-500 font-semibold uppercase tracking-wider border-b border-zinc-200">
                                         <th class="pb-2 w-[25%] pl-1">Nombre</th>
                                         <th class="pb-2 w-[25%]">Detalle</th>
                                         <th class="pb-2 w-[10%] text-center">Cant.</th>
@@ -539,10 +539,10 @@ document.addEventListener('DOMContentLoaded', async () => {
                                     ${htmlelementos}                                 
                                 </tbody>                     
                                 <tfoot>                                 
-                                    <tr>                                         
+                                    <tr class="border-t border-zinc-900">                                         
                                         <td colspan="5" class="text-right py-3 pr-4 font-bold text-zinc-600">Subtotal:</td>                                         
-                                        <td class="py-3 text-right font-bold text-zinc-900 border-t border-zinc-300 cat-subtotal">$${formatCLP(cat.subtotal)}</td>
-                                        <td class="print:hidden ${isEditMode ? '' : 'hidden'} border-t border-zinc-300"></td>
+                                        <td class="py-3 text-right font-bold text-zinc-900 cat-subtotal">$${formatCLP(cat.subtotal)}</td>
+                                        <td class="print:hidden ${isEditMode ? '' : 'hidden'}"></td>
                                     </tr>
                                 </tfoot>
                             </table>
