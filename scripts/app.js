@@ -123,8 +123,28 @@ document.addEventListener('DOMContentLoaded', () => {
         const lista = document.getElementById('lista-presupuestos');
         lista.innerHTML = ''; // Limpiar lista
 
-        // Obtener todos y ordenar por fecha de modificación (Más recientes arriba)
-        const presupuestos = await localDB.presupuestos.toArray();
+        // Obtener todos los presupuestos de la base de datos local
+        let presupuestosRaw = await localDB.presupuestos.toArray();
+        
+        // --- GARBAGE COLLECTION (Auto-limpieza) ---
+        // Filtrar y eliminar silenciosamente los proyectos que se crearon pero quedaron 100% vacíos
+        const presupuestosValidos = [];
+        for (const p of presupuestosRaw) {
+            const isVacio = (!p.cliente?.destinatario && 
+                             !p.cliente?.constructora && 
+                             (!p.codigoProyecto || p.codigoProyecto === "Nuevo Proyecto") && 
+                             (!p.items || p.items.length === 0));
+            
+            if (isVacio) {
+                // Eliminar de la base de datos el "cascarón" vacío
+                await localDB.presupuestos.delete(p.id);
+            } else {
+                presupuestosValidos.push(p);
+            }
+        }
+
+        // Usar solo los válidos y ordenar por fecha de modificación (Más recientes arriba)
+        let presupuestos = presupuestosValidos;
         presupuestos.sort((a, b) => new Date(b.fechaModificacion) - new Date(a.fechaModificacion));
 
         if (presupuestos.length === 0) {
