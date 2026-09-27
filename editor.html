@@ -52,6 +52,16 @@
                 page-break-after: avoid !important;
                 break-after: avoid !important;
             }
+            /* Reducir el tamaño de fuente y ocultar placeholders en impresión */
+            html {
+                font-size: 14px !important;
+            }
+            ::placeholder,
+            ::-webkit-input-placeholder,
+            ::-moz-placeholder,
+            :-ms-input-placeholder {
+                color: transparent !important;
+            }
         }
     </style>
 </head>
@@ -197,7 +207,7 @@
                 </div>
 
                 <!-- Liquidación Final -->
-                <div class="flex justify-end mt-12">
+                <div class="flex justify-end mt-12 print:mt-6 print:break-inside-avoid">
                     <div class="w-1/2">
                         <div class="flex justify-between py-2 border-b border-zinc-200">
                             <span class="font-bold">Costo Directo Total:</span>

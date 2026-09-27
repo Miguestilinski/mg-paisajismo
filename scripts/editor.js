@@ -525,7 +525,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                         <div class="mb-3">
                             <table class="w-full text-left table-fixed">
                                 <thead>
-                                    <tr class="text-xs text-zinc-500 uppercase tracking-wider">
+                                    <tr class="text-xs text-zinc-800 font-extrabold uppercase tracking-wider border-b-2 border-zinc-800">
                                         <th class="pb-2 w-[25%] pl-1">Nombre</th>
                                         <th class="pb-2 w-[25%]">Detalle</th>
                                         <th class="pb-2 w-[10%] text-center">Cant.</th>
