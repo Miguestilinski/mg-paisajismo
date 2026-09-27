@@ -6,7 +6,6 @@ export function setupImport(pData, guardarCallback) {
     const box = document.getElementById('modal-importar-box');
     const btnCancel = document.getElementById('btn-modal-importar-cancel');
     const btnOk = document.getElementById('btn-modal-importar-ok');
-    const textarea = document.getElementById('importar-texto');
     const fileInput = document.getElementById('importar-file');
 
     if(!btnImportar || !modal) return;
@@ -17,7 +16,6 @@ export function setupImport(pData, guardarCallback) {
         modal.classList.remove('opacity-100');
         modal.classList.add('opacity-0');
         setTimeout(() => modal.classList.add('hidden'), 200);
-        textarea.value = '';
         fileInput.value = '';
     };
 
@@ -28,16 +26,14 @@ export function setupImport(pData, guardarCallback) {
             modal.classList.add('opacity-100');
             box.classList.remove('scale-95');
             box.classList.add('scale-100');
-            textarea.focus();
         }, 10);
     });
 
     btnCancel.addEventListener('click', cleanup);
 
     btnOk.addEventListener('click', async () => {
-        let texto = textarea.value.trim();
+        let texto = '';
         
-        // Si hay archivo, leerlo e ignorar el textarea
         if (fileInput.files.length > 0) {
             const file = fileInput.files[0];
             const nombreArchivo = file.name.toLowerCase();
@@ -54,10 +50,13 @@ export function setupImport(pData, guardarCallback) {
                 window.customAlert("Error", "No se pudo leer el archivo adjunto.", "bg-red-500", "hover:bg-red-600");
                 return;
             }
+        } else {
+            window.customAlert("Atención", "Por favor, selecciona un archivo para importar.", "bg-amber-500", "hover:bg-amber-600");
+            return;
         }
 
         if (!texto) {
-            window.customAlert("Atención", "No hay datos para procesar. Pega texto desde Excel o sube un archivo.", "bg-amber-500", "hover:bg-amber-600");
+            window.customAlert("Atención", "El archivo está vacío o no se pudo extraer información.", "bg-amber-500", "hover:bg-amber-600");
             return;
         }
 

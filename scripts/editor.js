@@ -197,12 +197,31 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         pData.items.forEach(cat => {
             let catSubtotal = 0;
-            cat.subitems.forEach(art => {
-                const cant = parseFloat(art.cantidad) || 0;
-                const precio = parseFloat(art.precioUnitario) || 0;
-                art.precioTotal = cant * precio;
-                catSubtotal += art.precioTotal;
-            });
+            
+            if (!cat.modo || cat.modo === 'simple') {
+                if (!cat.subitems) cat.subitems = [];
+                cat.subitems.forEach(art => {
+                    const cant = parseFloat(art.cantidad) || 0;
+                    const precio = parseFloat(art.precioUnitario) || 0;
+                    art.precioTotal = cant * precio;
+                    catSubtotal += art.precioTotal;
+                });
+            } else {
+                if (!cat.subgrupos) cat.subgrupos = [];
+                cat.subgrupos.forEach(subg => {
+                    let subgTotal = 0;
+                    if (!subg.subitems) subg.subitems = [];
+                    subg.subitems.forEach(art => {
+                        const cant = parseFloat(art.cantidad) || 0;
+                        const precio = parseFloat(art.precioUnitario) || 0;
+                        art.precioTotal = cant * precio;
+                        subgTotal += art.precioTotal;
+                    });
+                    subg.subtotal = subgTotal;
+                    catSubtotal += subgTotal;
+                });
+            }
+            
             cat.subtotal = catSubtotal;
             costoDirectoTotal += catSubtotal;
         });
@@ -410,19 +429,56 @@ document.addEventListener('DOMContentLoaded', async () => {
         const btnDownCat = e.target.closest('.btn-down-cat');
         const btnUpArt = e.target.closest('.btn-up-art');
         const btnDownArt = e.target.closest('.btn-down-art');
+        const btnSetModo = e.target.closest('.btn-set-modo');
+        const btnAddSubg = e.target.closest('.btn-add-subg');
+        const btnDelSubg = e.target.closest('.btn-del-subg');
+
+        // Establecer Modo (Simple o Compuesto)
+        if (btnSetModo) {
+            const catIndex = btnSetModo.dataset.cat;
+            const modo = btnSetModo.dataset.modo;
+            pData.items[catIndex].modo = modo;
+            
+            if (modo === 'compuesto') {
+                pData.items[catIndex].subgrupos.push({ id: 'sub_' + Date.now(), tituloSubgrupo: "Nuevo Subgrupo", subitems: [], subtotal: 0 });
+            } else {
+                pData.items[catIndex].subitems.push({ descripcion: "", detalle: "", cantidad: "", unidad: "unid", precioUnitario: "", precioTotal: 0 });
+            }
+            guardarYRenderizar();
+            return;
+        }
+
+        // Añadir/Eliminar Subgrupo
+        if (btnAddSubg) {
+            const catIndex = btnAddSubg.dataset.cat;
+            pData.items[catIndex].subgrupos.push({ id: 'sub_' + Date.now(), tituloSubgrupo: "Nuevo Subgrupo", subitems: [], subtotal: 0 });
+            guardarYRenderizar();
+            return;
+        } else if (btnDelSubg) {
+            const catIndex = btnDelSubg.dataset.cat;
+            const subgIndex = btnDelSubg.dataset.subg;
+            pData.items[catIndex].subgrupos.splice(subgIndex, 1);
+            if (pData.items[catIndex].subgrupos.length === 0) pData.items[catIndex].modo = 'simple'; // Resetea si borras el último
+            guardarYRenderizar();
+            return;
+        }
+
+        // Recuperar Arrays Correctos para Elementos
+        const getTargetArray = (cIdx, sIdx) => sIdx !== undefined ? pData.items[cIdx].subgrupos[sIdx].subitems : pData.items[cIdx].subitems;
 
         if (btnAdd) {
             const catIndex = btnAdd.dataset.cat;
-            pData.items[catIndex].subitems.push({
+            const subgIndex = btnAdd.dataset.subg;
+            const targetArray = getTargetArray(catIndex, subgIndex);
+            
+            targetArray.push({
                 descripcion: "", detalle: "", cantidad: "", unidad: "unid", precioUnitario: "", precioTotal: 0
             });
             guardarYRenderizar();
-            setTimeout(() => {
-                const inputs = itemsContainer.querySelectorAll(`tr[data-cat="${catIndex}"]`).lastChild?.querySelectorAll('input');
-                if(inputs) inputs[0].focus();
-            }, 50);
         } else if (btnDelArt) {
-            pData.items[parseInt(btnDelArt.dataset.cat)].subitems.splice(parseInt(btnDelArt.dataset.art), 1);
+            const catIndex = parseInt(btnDelArt.dataset.cat);
+            const subgIndex = btnDelArt.dataset.subg;
+            getTargetArray(catIndex, subgIndex).splice(parseInt(btnDelArt.dataset.art), 1);
             guardarYRenderizar();
         } else if (btnDelCat) {
             const cIdx = parseInt(btnDelCat.dataset.cat);
@@ -450,16 +506,20 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
         } else if (btnUpArt) {
             const cIdx = parseInt(btnUpArt.dataset.cat);
+            const sIdx = btnUpArt.dataset.subg;
             const aIdx = parseInt(btnUpArt.dataset.art);
+            const arr = getTargetArray(cIdx, sIdx);
             if (aIdx > 0) {
-                [pData.items[cIdx].subitems[aIdx - 1], pData.items[cIdx].subitems[aIdx]] = [pData.items[cIdx].subitems[aIdx], pData.items[cIdx].subitems[aIdx - 1]];
+                [arr[aIdx - 1], arr[aIdx]] = [arr[aIdx], arr[aIdx - 1]];
                 guardarYRenderizar();
             }
         } else if (btnDownArt) {
             const cIdx = parseInt(btnDownArt.dataset.cat);
+            const sIdx = btnDownArt.dataset.subg;
             const aIdx = parseInt(btnDownArt.dataset.art);
-            if (aIdx < pData.items[cIdx].subitems.length - 1) {
-                [pData.items[cIdx].subitems[aIdx + 1], pData.items[cIdx].subitems[aIdx]] = [pData.items[cIdx].subitems[aIdx], pData.items[cIdx].subitems[aIdx + 1]];
+            const arr = getTargetArray(cIdx, sIdx);
+            if (aIdx < arr.length - 1) {
+                [arr[aIdx + 1], arr[aIdx]] = [arr[aIdx], arr[aIdx + 1]];
                 guardarYRenderizar();
             }
         }
@@ -469,6 +529,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     itemsContainer.addEventListener('input', (e) => {
         if (e.target.classList.contains('input-cat-titulo')) {
             pData.items[e.target.dataset.cat].titulo = e.target.value;
+            guardarSilencioso();
+            return;
+        }
+        if (e.target.classList.contains('input-subg-titulo')) {
+            pData.items[e.target.dataset.cat].subgrupos[e.target.dataset.subg].tituloSubgrupo = e.target.value;
             guardarSilencioso();
             return;
         }
@@ -482,19 +547,28 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             const tr = e.target.closest('tr');
             const catIndex = tr.dataset.cat;
+            const subgIndex = tr.dataset.subg;
             const artIndex = tr.dataset.art;
             
-            pData.items[catIndex].subitems[artIndex][campo] = (campo === 'cantidad' || campo === 'precioUnitario') 
+            const targetArray = subgIndex !== undefined ? pData.items[catIndex].subgrupos[subgIndex].subitems : pData.items[catIndex].subitems;
+            
+            targetArray[artIndex][campo] = (campo === 'cantidad' || campo === 'precioUnitario') 
                 ? parseCLP(e.target.value) 
                 : e.target.value;
             
             if (campo === 'cantidad' || campo === 'precioUnitario') {
                 recalcularTotales();
-                tr.querySelector('.art-total').textContent = `$${formatCLP(pData.items[catIndex].subitems[artIndex].precioTotal)}`;
+                tr.querySelector('.art-total').textContent = `$${formatCLP(targetArray[artIndex].precioTotal)}`;
                 
-                tr.closest('[data-cat-index]').querySelectorAll('.cat-subtotal').forEach(el => {
-                    el.textContent = el.tagName === 'TD' ? `$${formatCLP(pData.items[catIndex].subtotal)}` : `Subtotal: $${formatCLP(pData.items[catIndex].subtotal)}`;
-                });
+                // Actualiza totales UI de forma eficiente
+                const contenedorRaiz = tr.closest('[data-cat-index]');
+                if (subgIndex !== undefined) {
+                    // Refresca el subtotal del subgrupo y el total de la categoría
+                    tr.closest(`[data-subg-index="${subgIndex}"]`).querySelector('.cat-subtotal').textContent = `$${formatCLP(pData.items[catIndex].subgrupos[subgIndex].subtotal)}`;
+                    contenedorRaiz.querySelector(':scope > div > .cat-subtotal').textContent = `$${formatCLP(pData.items[catIndex].subtotal)}`;
+                } else {
+                    contenedorRaiz.querySelector('.cat-subtotal').textContent = `$${formatCLP(pData.items[catIndex].subtotal)}`;
+                }
             }
             guardarSilencioso();
         }
