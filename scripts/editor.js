@@ -157,7 +157,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         inputDestinatario.value = pData.cliente.destinatario || '';
         document.getElementById('constructora-input').value = pData.cliente.constructora || '';
         lblSaludoNombre.textContent = pData.cliente.destinatario || '[Nombre]';
+    } else {
+        // Estructura segura en caso de que pData venga corrupto
+        pData.cliente = { destinatario: "", constructora: "", fecha: "" };
     }
+    
     document.getElementById('proyecto-input').value = pData.codigoProyecto || '';
     document.getElementById('intro-texto').value = pData.encabezadoTexto || '';
 
@@ -169,7 +173,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         actualizarFechaImpresa(pData.cliente.fecha);
     }
 
-    btnFechaHoy.addEventListener('click', () => setFechaHoy(true));
+    btnFechaHoy.addEventListener('click', () => {
+        setFechaHoy(true);
+        // Forzar guardado cuando hace click en Hoy
+        pData.fechaModificacion = new Date().toISOString();
+        guardarYRenderizar();
+    });
 
     // 2. Toggle del Panel Historial con Memoria (Local Storage)
     const btnToggleHistorial = document.getElementById('btn-toggle-historial');
@@ -434,8 +443,8 @@ document.addEventListener('DOMContentLoaded', async () => {
                         <input type="text" inputmode="numeric" class="input-art w-full border border-zinc-300 bg-zinc-50 hover:bg-zinc-100 focus:bg-white focus:border-zinc-900 rounded p-1.5 pl-6 text-sm text-right transition-colors print:border-0 print:bg-transparent print:p-0 print:pl-0" data-campo="precioUnitario" value="${art.precioUnitario ? formatCLP(art.precioUnitario) : ''}">                     
                     </td>                     
                     <td class="pb-2 font-semibold text-right align-middle text-zinc-800 art-total">$${formatCLP(art.precioTotal)}</td>
-                    <td class="pb-2 pl-4 w-28 align-middle print:hidden ${isEditMode ? '' : 'hidden'}">
-                        <div class="flex items-center justify-end gap-1">
+                    <td class="pb-2 pl-4 w-32 align-middle print:hidden ${isEditMode ? '' : 'hidden'}">
+                        <div class="flex items-center justify-end gap-1 px-2">
                             <button class="btn-up-art text-zinc-400 hover:text-zinc-800 p-1 disabled:opacity-30" data-cat="${catIndex}" data-art="${artIndex}" ${artIndex === 0 ? 'disabled' : ''}><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"></path></svg></button>
                             <button class="btn-down-art text-zinc-400 hover:text-zinc-800 p-1 disabled:opacity-30" data-cat="${catIndex}" data-art="${artIndex}" ${artIndex === cat.subitems.length - 1 ? 'disabled' : ''}><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg></button>
                             <button class="btn-del-art text-red-400 hover:text-red-600 transition-colors p-1 ml-2" data-cat="${catIndex}" data-art="${artIndex}" title="Eliminar elemento">
@@ -473,7 +482,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                                         <th class="pb-2 w-[10%]">Unid.</th>
                                         <th class="pb-2 w-[12%] text-right">P. Unit</th>
                                         <th class="pb-2 w-[12%] text-right pr-1">Total</th>
-                                        <th class="pb-2 w-28 pl-4 print:hidden ${isEditMode ? '' : 'hidden'}"></th>
+                                        <th class="pb-2 w-32 pl-4 print:hidden ${isEditMode ? '' : 'hidden'}"></th>
                                     </tr>
                                 </thead>
                                 <tbody>
