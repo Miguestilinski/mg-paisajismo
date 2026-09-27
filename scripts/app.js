@@ -142,32 +142,39 @@ document.addEventListener('DOMContentLoaded', () => {
             tr.innerHTML = `
                 <td class="p-5 text-zinc-500 text-sm whitespace-nowrap align-middle">${formatFecha(p.fechaModificacion)}</td>
                 <td class="p-5 align-middle">
-                    <div class="flex items-center gap-2 mb-0.5">
-                        <span class="font-bold text-zinc-900 text-base truncate max-w-[250px]" title="${nombreProyecto}">${nombreProyecto}</span>
-                        <button class="btn-editar-nombre text-zinc-400 hover:text-blue-600 transition-colors p-1 rounded hover:bg-blue-50" data-id="${p.id}" data-nombre="${nombreProyecto}" title="Editar nombre del proyecto">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
-                        </button>
-                        ${badgeLocal}
-                        ${badgeNube}
+                    <div class="flex items-center gap-3 mb-0.5">
+                        <span class="font-bold text-zinc-900 text-base truncate max-w-[280px]" title="${nombreProyecto}">${nombreProyecto}</span>
+                        <div class="flex items-center gap-1.5">
+                            ${badgeLocal}
+                            ${badgeNube}
+                        </div>
                     </div>
                     <div class="text-sm text-zinc-500 font-normal truncate max-w-sm">${nombreConstructora}</div>
                 </td>
                 <td class="p-5 font-extrabold text-zinc-800 whitespace-nowrap align-middle">$${formatCLP(totalNeto)}</td>
-                <td class="p-5 text-right whitespace-nowrap align-middle">
-                    <div class="flex items-center justify-end gap-4">
-                        <button class="btn-eliminar-proyecto text-zinc-300 hover:text-red-500 transition-colors p-1" data-id="${p.id}" data-nombre="${nombreProyecto}" title="Eliminar proyecto">
+                <td class="p-5 text-right whitespace-nowrap align-middle relative w-48">
+                    <!-- Contenedor por defecto: Texto "Abrir >" -->
+                    <div class="flex items-center justify-end w-full gap-1 text-zinc-500 group-hover:opacity-0 transition-opacity duration-200 font-semibold absolute inset-0 right-5 pointer-events-none">
+                        Abrir
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                    </div>
+                    
+                    <!-- Contenedor Hover: Botones de Acción -->
+                    <div class="flex items-center justify-end gap-3 opacity-0 group-hover:opacity-100 transition-opacity duration-200 absolute inset-0 right-5 bg-zinc-50/80 pr-2">
+                        <button class="btn-editar-nombre text-zinc-500 hover:text-blue-600 hover:bg-blue-50 transition-colors p-1.5 rounded-md flex items-center gap-1.5 text-sm font-medium" data-id="${p.id}" data-nombre="${nombreProyecto}">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
+                            Editar
+                        </button>
+                        <button class="btn-eliminar-proyecto text-zinc-400 hover:text-red-500 hover:bg-red-50 transition-colors p-1.5 rounded-md" data-id="${p.id}" data-nombre="${nombreProyecto}" title="Eliminar proyecto">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
                         </button>
-                        <div class="text-zinc-500 group-hover:text-zinc-900 font-bold transition-colors flex items-center gap-1">
-                            Abrir
-                            <svg class="w-5 h-5 transition-transform group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
-                        </div>
                     </div>
                 </td>
             `;
 
-            // Navegar al editor si se hace clic en la fila
+            // Navegar al editor si se hace clic en cualquier parte de la fila que NO sea un botón
             tr.addEventListener('click', (e) => {
+                if (e.target.closest('button')) return;
                 window.location.href = `editor.html?id=${p.id}`;
             });
 
