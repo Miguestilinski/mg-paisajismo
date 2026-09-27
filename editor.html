@@ -17,12 +17,12 @@
         .flatpickr-day.selected { background: #18181b !important; border-color: #18181b !important; }
     </style>
 </head>
-<body class="bg-cover bg-center bg-fixed text-zinc-900" style="background-image: url('./assets/fondo-1.jpg');">
+<body class="bg-cover bg-center bg-fixed text-zinc-900 print:bg-none print:bg-white" style="background-image: url('./assets/fondo-1.jpg');">
     
-    <div class="flex h-screen overflow-hidden bg-black/10 backdrop-blur-md">
+    <div class="flex h-screen overflow-hidden bg-black/10 backdrop-blur-md print:h-auto print:overflow-visible print:block print:bg-transparent">
         
         <!-- Panel Principal (Contiene herramientas y hoja) -->
-        <main class="flex-1 overflow-y-auto p-8 print:p-0 print:bg-white print:overflow-visible">
+        <main class="flex-1 overflow-y-auto p-8 print:p-0 print:bg-white print:overflow-visible print:h-auto print:block">            
             
             <!-- Contenedor Superior: Barra + Semáforo flotante -->
             <div class="mb-6 print:hidden sticky top-0 z-20">
