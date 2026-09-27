@@ -250,7 +250,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         pData.fechaModificacion = new Date().toISOString();
         
         const renderizarConFantasma = hayCambiosSinConfirmar();
-        renderizarRioVersiones(pData.historialVersiones, restaurarVersion, renderizarConFantasma, pData);
+        renderizarRioVersiones(pData.historialVersiones, restaurarVersion, renderizarConFantasma, pData, versionEnVistaPrevia?.versionId);
         
         await localDB.presupuestos.put(pData);
         
@@ -267,7 +267,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         await localDB.presupuestos.put(pData);
         
         const renderizarConFantasma = hayCambiosSinConfirmar();
-        renderizarRioVersiones(pData.historialVersiones, restaurarVersion, renderizarConFantasma, pData);
+        renderizarRioVersiones(pData.historialVersiones, restaurarVersion, renderizarConFantasma, pData, versionEnVistaPrevia?.versionId);
         
         indicarGuardando();
         clearTimeout(timeoutGuardado);
@@ -275,9 +275,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     // ==========================================
-    // MODO VISTA PREVIA
+    // MODO VISTA PREVIA (TOAST Y ESTADO)
     // ==========================================
-    const barraVistaPrevia = document.getElementById('barra-vista-previa');
+    const toastVistaPrevia = document.getElementById('toast-vista-previa');
     const barraHerramientas = document.getElementById('barra-herramientas-principal');
     const lblVistaPreviaTexto = document.getElementById('lbl-vista-previa-texto');
     const btnCancelarVP = document.getElementById('btn-cancelar-vista-previa');
@@ -287,7 +287,26 @@ document.addEventListener('DOMContentLoaded', async () => {
     let backupPDataTemporal = null; // Guarda el presente
     let versionEnVistaPrevia = null; // Guarda los metadatos de lo que estamos viendo
 
-    const restaurarVersion = async (snapshot, versionMeta) => {
+    const salirModoVistaPrevia = async () => {
+        enModoVistaPrevia = false;
+        pData = backupPDataTemporal;
+        backupPDataTemporal = null;
+        versionEnVistaPrevia = null;
+        
+        barraHerramientas.classList.remove('opacity-0', 'pointer-events-none', '-translate-y-4');
+        toastVistaPrevia.classList.add('translate-y-24', 'opacity-0');
+        toastVistaPrevia.classList.remove('translate-y-0', 'opacity-100');
+        
+        await guardarYRenderizar();
+    };
+
+    // Recibe isExitIntent=true cuando se hace clic en el "Fantasma" para salir
+    const restaurarVersion = async (snapshot, versionMeta, isExitIntent = false) => {
+        if (isExitIntent) {
+            salirModoVistaPrevia();
+            return;
+        }
+
         // Si no estábamos en vista previa, guardamos el presente
         if (!enModoVistaPrevia) {
             backupPDataTemporal = JSON.parse(JSON.stringify(pData));
@@ -296,10 +315,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         enModoVistaPrevia = true;
         versionEnVistaPrevia = versionMeta;
         
-        // Bloquear UI visualmente
+        // Mostrar Toast animado y atenuar barra superior
         barraHerramientas.classList.add('opacity-0', 'pointer-events-none', '-translate-y-4');
-        barraVistaPrevia.classList.remove('hidden');
-        lblVistaPreviaTexto.textContent = `Viendo: ${versionMeta.etiqueta || 'Versión antigua'} (Se generó un backup del borrador actual)`;
+        toastVistaPrevia.classList.remove('translate-y-24', 'opacity-0');
+        toastVistaPrevia.classList.add('translate-y-0', 'opacity-100');
+        
+        lblVistaPreviaTexto.textContent = `Viendo "${versionMeta.etiqueta || 'Versión antigua'}".`;
         
         // Inyectar datos en pantalla (sin guardar a la base de datos)
         pData = JSON.parse(JSON.stringify(snapshot));
@@ -322,18 +343,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
         recalcularTotales();
         renderItemsHTML(pData, isEditMode);
+        // Actualizamos el historial para que dibuje el pulso naranja
+        renderizarRioVersiones(pData.historialVersiones, restaurarVersion, true, backupPDataTemporal, versionEnVistaPrevia.versionId);
     };
 
-    btnCancelarVP.addEventListener('click', () => {
-        enModoVistaPrevia = false;
-        pData = backupPDataTemporal;
-        backupPDataTemporal = null;
-        
-        barraHerramientas.classList.remove('opacity-0', 'pointer-events-none', '-translate-y-4');
-        barraVistaPrevia.classList.add('hidden');
-        
-        guardarYRenderizar();
-    });
+    btnCancelarVP.addEventListener('click', salirModoVistaPrevia);
 
     btnRestaurarVP.addEventListener('click', async () => {
         // Al restaurar, avanzamos en el tiempo creando un nuevo nodo basado en la vista previa
@@ -346,9 +360,11 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         enModoVistaPrevia = false;
         backupPDataTemporal = null;
+        versionEnVistaPrevia = null;
         
         barraHerramientas.classList.remove('opacity-0', 'pointer-events-none', '-translate-y-4');
-        barraVistaPrevia.classList.add('hidden');
+        toastVistaPrevia.classList.add('translate-y-24', 'opacity-0');
+        toastVistaPrevia.classList.remove('translate-y-0', 'opacity-100');
         
         await guardarYRenderizar();
     });

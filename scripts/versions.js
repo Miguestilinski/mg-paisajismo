@@ -1,6 +1,6 @@
 // Este script manejará el historial local de un presupuesto activo.
 
-export function renderizarRioVersiones(versiones, onRestoreCallback, mostrarFantasma = false, pDataActual = null) {
+export function renderizarRioVersiones(versiones, onRestoreCallback, mostrarFantasma = false, pDataActual = null, idVersionVistaPrevia = null) {
     const contenedor = document.getElementById('rio-versiones');
     contenedor.innerHTML = '<div class="absolute left-8 top-0 bottom-0 w-0.5 bg-zinc-200 z-0"></div>';
     
@@ -17,16 +17,38 @@ export function renderizarRioVersiones(versiones, onRestoreCallback, mostrarFant
 
     // 1. Inyectar el "Fantasma" del Autoguardado si aplica (Siempre va arriba)
     if (mostrarFantasma && pDataActual) {
+        const esVistaPreviaActiva = idVersionVistaPrevia !== null;
         const nodoFantasma = document.createElement('div');
-        nodoFantasma.className = "relative z-10 flex items-start mb-6 group p-2 -ml-2 rounded-lg border border-dashed border-zinc-300 bg-zinc-50/50 cursor-default opacity-80";
-        nodoFantasma.innerHTML = `
-            <div class="absolute left-4 top-4 w-3.5 h-3.5 rounded-full border-2 border-dashed border-zinc-400 bg-transparent ring-4 ring-white shadow-sm"></div>
-            <div class="pl-12 w-full">
-                <p class="text-xs text-zinc-400 mb-0.5 animate-pulse">Guardando...</p>
-                <p class="text-sm text-zinc-600 font-medium leading-tight">Borrador actual</p>
-                <p class="text-xs font-bold text-zinc-600 mt-1.5 bg-zinc-200/50 inline-block px-2 py-0.5 rounded">Neto: $${formatCLP(pDataActual.totales.totalNeto)}</p>
-            </div>
-        `;
+        
+        // Si hay una vista previa activa, el borrador actual se vuelve clickeable para salir
+        if (esVistaPreviaActiva) {
+            nodoFantasma.className = "relative z-10 flex items-start mb-6 group p-2 -ml-2 rounded-lg border-2 border-dashed border-zinc-300 bg-white cursor-pointer hover:bg-zinc-50 transition-colors shadow-sm";
+            nodoFantasma.innerHTML = `
+                <div class="absolute left-4 top-4 w-3.5 h-3.5 rounded-full border-2 border-dashed border-zinc-400 bg-transparent ring-4 ring-white shadow-sm"></div>
+                <div class="pl-12 w-full">
+                    <span class="inline-flex items-center gap-1 bg-emerald-100 text-emerald-800 text-[10px] font-bold px-2 py-0.5 rounded-full mb-1 border border-emerald-200">
+                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Actual
+                    </span>
+                    <p class="text-sm text-zinc-900 font-bold leading-tight">Volver al borrador</p>
+                    <p class="text-xs text-zinc-500 mt-0.5">Click para salir de la vista previa</p>
+                </div>
+            `;
+            // Clickeable: Llama al callback pasando NULL para indicar "salir"
+            nodoFantasma.addEventListener('click', () => onRestoreCallback(null, null, true));
+        } else {
+            nodoFantasma.className = "relative z-10 flex items-start mb-6 group p-2 -ml-2 rounded-lg border border-dashed border-zinc-300 bg-zinc-50/50 cursor-default opacity-80";
+            nodoFantasma.innerHTML = `
+                <div class="absolute left-4 top-4 w-3.5 h-3.5 rounded-full border-2 border-dashed border-zinc-400 bg-transparent ring-4 ring-white shadow-sm"></div>
+                <div class="pl-12 w-full">
+                    <span class="inline-flex items-center gap-1 bg-emerald-100 text-emerald-800 text-[10px] font-bold px-2 py-0.5 rounded-full mb-1 border border-emerald-200">
+                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span> Actual
+                    </span>
+                    <p class="text-sm text-zinc-600 font-medium leading-tight">Borrador actual</p>
+                    <p class="text-xs font-bold text-zinc-600 mt-1.5 bg-zinc-200/50 inline-block px-2 py-0.5 rounded">Neto: $${formatCLP(pDataActual.totales.totalNeto)}</p>
+                </div>
+            `;
+        }
+        
         contenedor.appendChild(nodoFantasma);
     }
 
@@ -45,19 +67,31 @@ export function renderizarRioVersiones(versiones, onRestoreCallback, mostrarFant
     };
 
     versionesOrdenadas.forEach((ver, index) => {
-        // Si hay fantasma, NINGUNA versión guardada es la "latest" visualmente activa
         const isLatest = index === 0 && !mostrarFantasma; 
-        const colorPunto = isLatest ? 'bg-zinc-800 ring-zinc-200' : 'bg-zinc-300 ring-white';
-        const colorTexto = isLatest ? 'text-zinc-900 font-bold' : 'text-zinc-600 font-medium';
+        const isEnVistaPrevia = ver.versionId === idVersionVistaPrevia;
+        
+        let colorPunto = 'bg-zinc-300 ring-white';
+        let colorTexto = 'text-zinc-600 font-medium';
+        let animacionPunto = '';
 
-        // Check for PDF export badge
+        if (isEnVistaPrevia) {
+            colorPunto = 'bg-amber-500 ring-amber-200';
+            colorTexto = 'text-amber-900 font-bold';
+            animacionPunto = '<div class="absolute inset-0 bg-amber-400 rounded-full animate-ping opacity-75"></div>';
+        } else if (isLatest) {
+            colorPunto = 'bg-zinc-800 ring-zinc-200';
+            colorTexto = 'text-zinc-900 font-bold';
+        }
+
         const badgePdf = ver.isPdfExport ? `<span class="ml-2 inline-flex items-center gap-1 rounded bg-zinc-800 px-1.5 py-0.5 text-[10px] font-bold text-white"><svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg> Exportado</span>` : '';
 
         const nodoHtml = document.createElement('div');
-        nodoHtml.className = "relative z-10 flex items-start mb-6 group cursor-pointer hover:bg-white p-2 -ml-2 rounded-lg transition-colors border border-transparent hover:border-zinc-200 shadow-sm hover:shadow";
+        nodoHtml.className = `relative z-10 flex items-start mb-6 group cursor-pointer hover:bg-white p-2 -ml-2 rounded-lg transition-colors border ${isEnVistaPrevia ? 'border-amber-300 bg-amber-50/30' : 'border-transparent hover:border-zinc-200 hover:shadow-sm'}`;
         nodoHtml.innerHTML = `
-            <div class="absolute left-4 top-4 w-3.5 h-3.5 rounded-full ${colorPunto} ring-4 shadow-sm"></div>
-            <div class="pl-12 w-full">
+            <div class="absolute left-4 top-4 w-3.5 h-3.5 rounded-full ${colorPunto} ring-4 shadow-sm relative">
+                ${animacionPunto}
+            </div>
+            <div class="pl-12 w-full -mt-3.5">
                 <p class="text-xs text-zinc-400 mb-0.5">${formatearHora(ver.fechaHora)}</p>
                 <p class="text-sm ${colorTexto} leading-tight flex items-center">${ver.etiqueta || 'Guardado manual'}${badgePdf}</p>
                 <p class="text-xs font-bold text-zinc-800 mt-1.5 bg-zinc-100 inline-block px-2 py-0.5 rounded">Neto: $${formatCLP(ver.snapshot.totales.totalNeto)}</p>
