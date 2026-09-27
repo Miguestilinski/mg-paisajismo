@@ -64,8 +64,8 @@ export function renderItemsHTML(pData, isEditMode) {
                 <table class="w-full text-left table-fixed">
                     <thead>
                         <tr class="text-xs text-zinc-500 font-semibold uppercase tracking-wider border-b border-zinc-200">
-                            <th class="pb-2 w-[25%] pl-1">Nombre</th>
-                            <th class="pb-2 w-[25%]">Detalle</th>
+                            <th class="pb-2 w-[22%] pl-1">Nombre</th>
+                            <th class="pb-2 w-[22%]">Detalle</th>
                             <th class="pb-2 w-[10%] text-center">Cant.</th>
                             <th class="pb-2 w-[10%]">Unid.</th>
                             <th class="pb-2 w-[15%] text-right">P. Unit</th>

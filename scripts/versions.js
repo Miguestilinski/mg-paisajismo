@@ -99,6 +99,12 @@ export function renderizarRioVersiones(versiones, onRestoreCallback, mostrarFant
         `;
 
         nodoHtml.addEventListener('click', () => {
+            // Si hacemos clic en la versión que ya estamos previsualizando, cerramos la vista previa.
+            if (isEnVistaPrevia) {
+                onRestoreCallback(null, null, true);
+                return;
+            }
+
             const isIdentical = pDataActual && (stringifyParaComparar(ver.snapshot) === stringifyParaComparar(pDataActual));
 
             if (isIdentical) {

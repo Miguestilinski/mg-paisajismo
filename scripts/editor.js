@@ -195,10 +195,15 @@ document.addEventListener('DOMContentLoaded', async () => {
     function recalcularTotales() {
         let costoDirectoTotal = 0;
 
+        // Normalización estructural de los datos
         pData.items.forEach(cat => {
+            if (!cat.modo) cat.modo = (cat.subgrupos && cat.subgrupos.length > 0) ? 'compuesto' : 'simple';
+            if (!cat.subgrupos) cat.subgrupos = [];
+            if (!cat.subitems) cat.subitems = [];
+            
             let catSubtotal = 0;
             
-            if (!cat.modo || cat.modo === 'simple') {
+            if (cat.modo === 'simple') {
                 if (!cat.subitems) cat.subitems = [];
                 cat.subitems.forEach(art => {
                     const cant = parseFloat(art.cantidad) || 0;
@@ -297,8 +302,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             barraHerramientas.classList.remove('opacity-0', 'pointer-events-none', '-translate-y-4');
         }
         if (toastVistaPrevia) {
-            toastVistaPrevia.classList.add('translate-y-24', 'opacity-0');
-            toastVistaPrevia.classList.remove('translate-y-0', 'opacity-100');
+            toastVistaPrevia.classList.add('translate-y-24', 'opacity-0', 'pointer-events-none');
+            toastVistaPrevia.classList.remove('translate-y-0', 'opacity-100', 'pointer-events-auto');
         }
         
         await guardarYRenderizar();
@@ -319,13 +324,13 @@ document.addEventListener('DOMContentLoaded', async () => {
         enModoVistaPrevia = true;
         versionEnVistaPrevia = versionMeta;
         
-        // Mostrar Toast animado y atenuar barra superior
+        // Mostrar Toast animado habilitando clics, y atenuar barra superior
         if (barraHerramientas) {
             barraHerramientas.classList.add('opacity-0', 'pointer-events-none', '-translate-y-4');
         }
         if (toastVistaPrevia) {
-            toastVistaPrevia.classList.remove('translate-y-24', 'opacity-0');
-            toastVistaPrevia.classList.add('translate-y-0', 'opacity-100');
+            toastVistaPrevia.classList.remove('translate-y-24', 'opacity-0', 'pointer-events-none');
+            toastVistaPrevia.classList.add('translate-y-0', 'opacity-100', 'pointer-events-auto');
         }
         
         lblVistaPreviaTexto.textContent = `Viendo "${versionMeta.etiqueta || 'Versión antigua'}".`;
@@ -403,6 +408,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             "Ej: Opción sin juegos infantiles"
         );
         if (etiqueta === null) return; 
+        
+        recalcularTotales(); // Normalizar la data antes de tomar la fotografía para evitar nodos fantasmas
 
         pData.historialVersiones.push({
             versionId: `v_${Date.now()}`,
