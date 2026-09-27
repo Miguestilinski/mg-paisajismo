@@ -297,13 +297,29 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // Evalúa si el estado actual es igual al último hito guardado (o si nunca se ha guardado uno pero hay datos)
     function hayCambiosSinConfirmar() {
-        if (isHojaVacia()) return false; // Si está vacía, no hay nada que confirmar
-        if (pData.historialVersiones.length === 0) return true; // Hay datos pero 0 versiones
+        if (isHojaVacia()) return false; 
+        if (pData.historialVersiones.length === 0) return true;
         
-        // Comparamos la fecha de modificación actual con la del último snapshot guardado
-        // Como guardamos profundo, una simple diferencia de tiempo al teclear nos basta
         const ultimaVersion = pData.historialVersiones[pData.historialVersiones.length - 1];
-        return pData.fechaModificacion !== ultimaVersion.fechaHora; 
+        
+        // Comparamos solo los datos relevantes que el usuario edita, ignorando metadatos temporales
+        const currentData = {
+            cliente: pData.cliente,
+            codigoProyecto: pData.codigoProyecto,
+            encabezadoTexto: pData.encabezadoTexto,
+            items: pData.items,
+            totales: pData.totales
+        };
+        
+        const lastSnapshotData = {
+            cliente: ultimaVersion.snapshot.cliente,
+            codigoProyecto: ultimaVersion.snapshot.codigoProyecto,
+            encabezadoTexto: ultimaVersion.snapshot.encabezadoTexto,
+            items: ultimaVersion.snapshot.items,
+            totales: ultimaVersion.snapshot.totales
+        };
+
+        return JSON.stringify(currentData) !== JSON.stringify(lastSnapshotData);
     }
 
     // --- Historial de Versiones (Hitos) ---
@@ -443,11 +459,13 @@ document.addEventListener('DOMContentLoaded', async () => {
                         <input type="text" inputmode="numeric" class="input-art w-full border border-zinc-300 bg-zinc-50 hover:bg-zinc-100 focus:bg-white focus:border-zinc-900 rounded p-1.5 pl-6 text-sm text-right transition-colors print:border-0 print:bg-transparent print:p-0 print:pl-0" data-campo="precioUnitario" value="${art.precioUnitario ? formatCLP(art.precioUnitario) : ''}">                     
                     </td>                     
                     <td class="pb-2 font-semibold text-right align-middle text-zinc-800 art-total">$${formatCLP(art.precioTotal)}</td>
-                    <td class="pb-2 pl-4 w-32 align-middle print:hidden ${isEditMode ? '' : 'hidden'}">
-                        <div class="flex items-center justify-end gap-1 px-2">
-                            <button class="btn-up-art text-zinc-400 hover:text-zinc-800 p-1 disabled:opacity-30" data-cat="${catIndex}" data-art="${artIndex}" ${artIndex === 0 ? 'disabled' : ''}><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"></path></svg></button>
-                            <button class="btn-down-art text-zinc-400 hover:text-zinc-800 p-1 disabled:opacity-30" data-cat="${catIndex}" data-art="${artIndex}" ${artIndex === cat.subitems.length - 1 ? 'disabled' : ''}><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg></button>
-                            <button class="btn-del-art text-red-400 hover:text-red-600 transition-colors p-1 ml-2" data-cat="${catIndex}" data-art="${artIndex}" title="Eliminar elemento">
+                    <td class="pb-2 pl-4 w-28 align-middle print:hidden ${isEditMode ? '' : 'hidden'}">
+                        <div class="flex items-center justify-end gap-2 pr-1">
+                            <div class="flex flex-col">
+                                <button class="btn-up-art text-zinc-400 hover:text-zinc-800 p-0.5 disabled:opacity-30" data-cat="${catIndex}" data-art="${artIndex}" ${artIndex === 0 ? 'disabled' : ''}><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"></path></svg></button>
+                                <button class="btn-down-art text-zinc-400 hover:text-zinc-800 p-0.5 disabled:opacity-30" data-cat="${catIndex}" data-art="${artIndex}" ${artIndex === cat.subitems.length - 1 ? 'disabled' : ''}><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg></button>
+                            </div>
+                            <button class="btn-del-art text-red-400 hover:text-red-600 transition-colors p-1" data-cat="${catIndex}" data-art="${artIndex}" title="Eliminar elemento">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
                             </button>
                         </div>
@@ -482,11 +500,16 @@ document.addEventListener('DOMContentLoaded', async () => {
                                         <th class="pb-2 w-[10%]">Unid.</th>
                                         <th class="pb-2 w-[12%] text-right">P. Unit</th>
                                         <th class="pb-2 w-[12%] text-right pr-1">Total</th>
-                                        <th class="pb-2 w-32 pl-4 print:hidden ${isEditMode ? '' : 'hidden'}"></th>
+                                        <th class="pb-2 w-28 pl-4 print:hidden ${isEditMode ? '' : 'hidden'}"></th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    ${htmlelementos}                                 </tbody>                                 <tfoot>                                     <tr>                                         <td colspan="5" class="text-right py-3 pr-4 font-bold text-zinc-600">Subtotal:</td>                                         <td class="py-3 text-right font-bold text-zinc-900 border-t border-zinc-300 cat-subtotal">$${formatCLP(cat.subtotal)}</td>
+                                    ${htmlelementos}                                 
+                                </tbody>                     
+                                <tfoot>                                 
+                                    <tr>                                         
+                                        <td colspan="5" class="text-right py-3 pr-4 font-bold text-zinc-600">Subtotal:</td>                                         
+                                        <td class="py-3 text-right font-bold text-zinc-900 border-t border-zinc-300 cat-subtotal">$${formatCLP(cat.subtotal)}</td>
                                         <td class="print:hidden ${isEditMode ? '' : 'hidden'} border-t border-zinc-300"></td>
                                     </tr>
                                 </tfoot>
