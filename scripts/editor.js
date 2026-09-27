@@ -473,7 +473,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         
         pData.items.forEach((cat, catIndex) => {
             let htmlelementos = cat.subitems.map((art, artIndex) => `
-                <tr class="group" data-cat="${catIndex}" data-art="${artIndex}">
+                <tr class="group print:break-inside-avoid" data-cat="${catIndex}" data-art="${artIndex}">
                     <td class="pr-2 pb-2"><input type="text" class="input-art w-full border border-zinc-300 bg-zinc-50 hover:bg-zinc-100 focus:bg-white focus:border-zinc-900 rounded p-1.5 text-sm transition-colors print:border-0 print:bg-transparent print:p-0" data-campo="descripcion" value="${art.descripcion || ''}" placeholder="Ej. Quillay"></td>
                     <td class="pr-2 pb-2"><input type="text" class="input-art w-full border border-zinc-300 bg-zinc-50 hover:bg-zinc-100 focus:bg-white focus:border-zinc-900 rounded p-1.5 text-sm transition-colors print:border-0 print:bg-transparent print:p-0" data-campo="detalle" value="${art.detalle || ''}" placeholder="Ej. 2 mts"></td>
                     <td class="pr-2 pb-2"><input type="text" inputmode="numeric" class="input-art w-full border border-zinc-300 bg-zinc-50 hover:bg-zinc-100 focus:bg-white focus:border-zinc-900 rounded p-1.5 text-sm text-center transition-colors print:border-0 print:bg-transparent print:p-0" data-campo="cantidad" value="${art.cantidad ? formatCLP(art.cantidad) : ''}"></td>
@@ -506,7 +506,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             `).join('');
 
             const catHtml = `
-                <div class="mb-8 relative" data-cat-index="${catIndex}">
+                <div class="mb-8 relative print:break-inside-avoid" data-cat-index="${catIndex}">
                     <div class="font-bold text-lg text-zinc-900 mb-4 border-b-2 border-zinc-900 pb-1 flex justify-between items-end">
                         <div class="flex items-center flex-1 pr-4">
                             <span class="mr-2">${catIndex + 1}.</span>
