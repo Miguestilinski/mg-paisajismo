@@ -40,8 +40,16 @@ export function setupImport(pData, guardarCallback) {
         // Si hay archivo, leerlo e ignorar el textarea
         if (fileInput.files.length > 0) {
             const file = fileInput.files[0];
+            const nombreArchivo = file.name.toLowerCase();
+
             try {
-                texto = await file.text();
+                if (nombreArchivo.endsWith('.xlsx') || nombreArchivo.endsWith('.xls') || nombreArchivo.endsWith('.csv')) {
+                    texto = await extraerTextoExcel(file);
+                } else if (nombreArchivo.endsWith('.docx')) {
+                    texto = await extraerTextoWord(file);
+                } else {
+                    texto = await file.text();
+                }
             } catch (e) {
                 window.customAlert("Error", "No se pudo leer el archivo adjunto.", "bg-red-500", "hover:bg-red-600");
                 return;
@@ -55,6 +63,47 @@ export function setupImport(pData, guardarCallback) {
 
         procesarDatos(texto, pData, guardarCallback);
         cleanup();
+    });
+}
+
+// Extrae texto de un archivo Excel usando SheetJS
+async function extraerTextoExcel(file) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            try {
+                const data = new Uint8Array(e.target.result);
+                const workbook = XLSX.read(data, { type: 'array' });
+                // Asumimos que la tabla principal está en la primera hoja
+                const primeraHoja = workbook.Sheets[workbook.SheetNames[0]];
+                // Convertimos la hoja a CSV (texto plano separado por comas/puntos y comas)
+                const csvTexto = XLSX.utils.sheet_to_csv(primeraHoja, { FS: "\t" }); // Forzamos tabulaciones para compatibilidad con la heurística
+                resolve(csvTexto);
+            } catch (error) {
+                reject(error);
+            }
+        };
+        reader.onerror = reject;
+        reader.readAsArrayBuffer(file);
+    });
+}
+
+// Extrae texto de un archivo Word usando Mammoth.js
+async function extraerTextoWord(file) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            const arrayBuffer = e.target.result;
+            mammoth.extractRawText({ arrayBuffer: arrayBuffer })
+                .then(function(result) {
+                    // Mammoth extrae todo el texto, las tablas pueden quedar separadas por \n
+                    // Será procesado por la heurística de saltos de línea
+                    resolve(result.value); 
+                })
+                .catch(reject);
+        };
+        reader.onerror = reject;
+        reader.readAsArrayBuffer(file);
     });
 }
 
