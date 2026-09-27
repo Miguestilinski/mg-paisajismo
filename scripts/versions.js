@@ -88,10 +88,10 @@ export function renderizarRioVersiones(versiones, onRestoreCallback, mostrarFant
         const nodoHtml = document.createElement('div');
         nodoHtml.className = `relative z-10 flex items-start mb-6 group cursor-pointer hover:bg-white p-2 -ml-2 rounded-lg transition-colors border ${isEnVistaPrevia ? 'border-amber-300 bg-amber-50/30' : 'border-transparent hover:border-zinc-200 hover:shadow-sm'}`;
         nodoHtml.innerHTML = `
-            <div class="absolute left-4 top-4 w-3.5 h-3.5 rounded-full ${colorPunto} ring-4 shadow-sm relative">
+            <div class="absolute left-4 top-4 w-3.5 h-3.5 rounded-full ${colorPunto} ring-4 shadow-sm">
                 ${animacionPunto}
             </div>
-            <div class="pl-12 w-full -mt-3.5">
+            <div class="pl-12 w-full">
                 <p class="text-xs text-zinc-400 mb-0.5">${formatearHora(ver.fechaHora)}</p>
                 <p class="text-sm ${colorTexto} leading-tight flex items-center">${ver.etiqueta || 'Guardado manual'}${badgePdf}</p>
                 <p class="text-xs font-bold text-zinc-800 mt-1.5 bg-zinc-100 inline-block px-2 py-0.5 rounded">Neto: $${formatCLP(ver.snapshot.totales.totalNeto)}</p>

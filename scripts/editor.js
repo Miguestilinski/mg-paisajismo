@@ -282,7 +282,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     // ==========================================
     // MODO VISTA PREVIA (TOAST Y ESTADO)
     // ==========================================
-    const toastVistaPrevia = document.getElementById('toast-vista-previa');
+    const barraVistaPrevia = document.getElementById('barra-vista-previa');
     const barraHerramientas = document.getElementById('barra-herramientas-principal'); 
     const lblVistaPreviaTexto = document.getElementById('lbl-vista-previa-texto');
     const btnCancelarVP = document.getElementById('btn-cancelar-vista-previa');
@@ -292,6 +292,29 @@ document.addEventListener('DOMContentLoaded', async () => {
     let backupPDataTemporal = null; // Guarda el presente
     let versionEnVistaPrevia = null; // Guarda los metadatos de lo que estamos viendo
 
+    // Aplica o remueve clases "readonly" a todos los inputs (estilo PDF)
+    const toggleReadOnlyUI = (readOnly) => {
+        const inputs = document.querySelectorAll('#hoja-presupuesto input, #hoja-presupuesto textarea');
+        inputs.forEach(input => {
+            input.readOnly = readOnly;
+            if (readOnly) {
+                input.classList.add('pointer-events-none', 'bg-transparent', 'border-transparent');
+                input.classList.remove('border-zinc-300', 'bg-zinc-50', 'hover:bg-zinc-100');
+            } else {
+                input.classList.remove('pointer-events-none', 'bg-transparent', 'border-transparent');
+                input.classList.add('border-zinc-300', 'bg-zinc-50', 'hover:bg-zinc-100');
+            }
+        });
+        
+        // Ocultar botones de edición estructural
+        const editButtons = document.querySelectorAll('.print\\:hidden, #btn-toggle-edit');
+        editButtons.forEach(btn => {
+            if (btn.closest('#barra-vista-previa')) return; // No ocultar la barra de VP
+            if (readOnly) btn.style.display = 'none';
+            else btn.style.display = '';
+        });
+    };
+
     const salirModoVistaPrevia = async () => {
         enModoVistaPrevia = false;
         pData = backupPDataTemporal;
@@ -299,13 +322,13 @@ document.addEventListener('DOMContentLoaded', async () => {
         versionEnVistaPrevia = null;
         
         if (barraHerramientas) {
-            barraHerramientas.classList.remove('opacity-0', 'pointer-events-none', '-translate-y-4');
+            barraHerramientas.classList.remove('hidden');
         }
-        if (toastVistaPrevia) {
-            toastVistaPrevia.classList.add('translate-y-24', 'opacity-0', 'pointer-events-none');
-            toastVistaPrevia.classList.remove('translate-y-0', 'opacity-100', 'pointer-events-auto');
+        if (barraVistaPrevia) {
+            barraVistaPrevia.classList.add('hidden');
         }
         
+        toggleReadOnlyUI(false);
         await guardarYRenderizar();
     };
 
@@ -324,13 +347,13 @@ document.addEventListener('DOMContentLoaded', async () => {
         enModoVistaPrevia = true;
         versionEnVistaPrevia = versionMeta;
         
-        // Mostrar Toast animado habilitando clics, y atenuar barra superior
+        // Alternar barras
         if (barraHerramientas) {
-            barraHerramientas.classList.add('opacity-0', 'pointer-events-none', '-translate-y-4');
+            barraHerramientas.classList.add('hidden');
         }
-        if (toastVistaPrevia) {
-            toastVistaPrevia.classList.remove('translate-y-24', 'opacity-0', 'pointer-events-none');
-            toastVistaPrevia.classList.add('translate-y-0', 'opacity-100', 'pointer-events-auto');
+        if (barraVistaPrevia) {
+            barraVistaPrevia.classList.remove('hidden');
+            barraVistaPrevia.classList.add('flex');
         }
         
         lblVistaPreviaTexto.textContent = `Viendo "${versionMeta.etiqueta || 'Versión antigua'}".`;
@@ -355,8 +378,10 @@ document.addEventListener('DOMContentLoaded', async () => {
             actualizarFechaImpresa(pData.cliente.fecha);
         }
         recalcularTotales();
-        renderItemsHTML(pData, isEditMode);
-        // Actualizamos el historial para que dibuje el pulso naranja
+        renderItemsHTML(pData, false); // Forzamos isEditMode false
+        toggleReadOnlyUI(true);
+        
+        // Forzamos "mostrarFantasma = true" para que siempre esté el botón "Actual" al estar en VP
         renderizarRioVersiones(pData.historialVersiones, restaurarVersion, true, backupPDataTemporal, versionEnVistaPrevia.versionId);
     };
 
