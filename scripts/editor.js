@@ -1,5 +1,6 @@
 import { localDB } from './db.js';
 import { renderizarRioVersiones } from './versions.js';
+import { setupImport } from './importar.js';
 
 document.addEventListener('DOMContentLoaded', async () => {
     // Obtener ID desde la URL (ej: editor.html?id=presupuesto_123)
@@ -104,9 +105,43 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     };
 
+    window.customAlert = function(title, message, okColorBase = "bg-blue-600", okColorHover = "hover:bg-blue-700") {
+        return new Promise((resolve) => {
+            const modal = document.getElementById('modal-alert');
+            const box = document.getElementById('modal-alert-box');
+            const btnOk = document.getElementById('btn-modal-alert-ok');
+
+            document.getElementById('modal-alert-title').textContent = title;
+            document.getElementById('modal-alert-message').innerHTML = message;
+            
+            btnOk.className = `px-5 py-2 rounded-lg font-bold text-white transition-colors shadow-sm ${okColorBase} ${okColorHover}`;
+
+            const cleanup = () => {
+                box.classList.remove('scale-100');
+                box.classList.add('scale-95');
+                modal.classList.remove('opacity-100');
+                modal.classList.add('opacity-0');
+                setTimeout(() => modal.classList.add('hidden'), 200);
+                btnOk.removeEventListener('click', onOk);
+            };
+
+            const onOk = () => { cleanup(); resolve(true); };
+            btnOk.addEventListener('click', onOk);
+
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                modal.classList.remove('opacity-0');
+                modal.classList.add('opacity-100');
+                box.classList.remove('scale-95');
+                box.classList.add('scale-100');
+            }, 10);
+        });
+    };
+
     // ==========================================
     // ESTADO GLOBAL EN MEMORIA
     // ==========================================
+
     let pData = await localDB.presupuestos.get(id) || {};
     if (!pData.items) pData.items = [];
     if (!pData.cliente) pData.cliente = {};
@@ -755,5 +790,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             await guardarYRenderizar();
         });
     });
+
+    // Iniciar herramienta de importación
+    setupImport(pData, guardarYRenderizar);
 
 });

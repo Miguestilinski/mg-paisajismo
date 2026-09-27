@@ -33,6 +33,17 @@ export function renderizarRioVersiones(versiones, onRestoreCallback, mostrarFant
     // Ordenar del más nuevo (arriba) al más viejo (abajo)
     const versionesOrdenadas = [...(versiones || [])].sort((a, b) => new Date(b.fechaHora) - new Date(a.fechaHora));
 
+    const stringifyParaComparar = (data) => {
+        if (!data) return "";
+        return JSON.stringify({
+            cliente: data.cliente || {},
+            codigoProyecto: data.codigoProyecto || "",
+            encabezadoTexto: data.encabezadoTexto || "",
+            items: data.items || [],
+            totales: data.totales || {}
+        });
+    };
+
     versionesOrdenadas.forEach((ver, index) => {
         // Si hay fantasma, NINGUNA versión guardada es la "latest" visualmente activa
         const isLatest = index === 0 && !mostrarFantasma; 
@@ -54,16 +65,28 @@ export function renderizarRioVersiones(versiones, onRestoreCallback, mostrarFant
         `;
 
         nodoHtml.addEventListener('click', () => {
-            // Llamamos a la función asíncrona del Modal Custom inyectada desde editor.js
-            window.customConfirm(
-                "Restaurar Versión", 
-                `¿Restaurar la versión "${ver.etiqueta}" de las ${formatearHora(ver.fechaHora)}?<br><br>Los cambios actuales no guardados se perderán.`,
-                "Sí, restaurar",
-                "bg-blue-600",
-                "hover:bg-blue-700"
-            ).then((confirmed) => {
-                if(confirmed) onRestoreCallback(ver.snapshot);
-            });
+            const isIdentical = pDataActual && (stringifyParaComparar(ver.snapshot) === stringifyParaComparar(pDataActual));
+
+            if (isIdentical) {
+                // Alerta nativa a través del modal custom si no hay cambios
+                window.customAlert(
+                    "Versión Actual", 
+                    "Ya estás visualizando esta versión. No hay cambios pendientes que restaurar.",
+                    "bg-zinc-800",
+                    "hover:bg-zinc-900"
+                );
+            } else {
+                // Confirmación para sobreescribir borrador si hay cambios
+                window.customConfirm(
+                    "Restaurar Versión", 
+                    `¿Restaurar la versión <b>"${ver.etiqueta}"</b> de las ${formatearHora(ver.fechaHora)}?<br><br>Cualquier modificación actual que no hayas guardado se perderá.`,
+                    "Sí, restaurar",
+                    "bg-blue-600",
+                    "hover:bg-blue-700"
+                ).then((confirmed) => {
+                    if(confirmed) onRestoreCallback(ver.snapshot);
+                });
+            }
         });
 
         contenedor.appendChild(nodoHtml);
