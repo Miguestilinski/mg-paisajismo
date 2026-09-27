@@ -251,27 +251,28 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // 5. Evento de impresión (Exportar)
     btnImprimir.addEventListener('click', async () => {
-        // Si hay una versión previa guardada manualmente, le añadimos el "badge" de exportado
+        const isDirty = hayCambiosSinConfirmar();
+        
         if (pData.historialVersiones && pData.historialVersiones.length > 0) {
-            const ultimaVersion = pData.historialVersiones[pData.historialVersiones.length - 1];
-            // Solo lo marcamos si el documento no está "sucio" (si es igual a la última versión)
-            if (pData.fechaModificacion === ultimaVersion.fechaHora) {
-                ultimaVersion.isPdfExport = true;
-            } else {
-                // Si el documento está sucio, creamos un "Autoguardado antes de PDF" automático
+            if (isDirty) {
+                // Hay cambios sin guardar, creamos un nodo nuevo
                 pData.historialVersiones.push({
-                    versionId: `v_auto_${Date.now()}`,
-                    fechaHora: pData.fechaModificacion,
-                    etiqueta: "Autoguardado (Impresión)",
+                    versionId: `v_pdf_${Date.now()}`,
+                    fechaHora: new Date().toISOString(),
+                    etiqueta: "Exportado automático",
                     isPdfExport: true,
                     snapshot: JSON.parse(JSON.stringify(pData))
                 });
+            } else {
+                // No hay cambios, solo agregamos el badge a la versión existente
+                pData.historialVersiones[pData.historialVersiones.length - 1].isPdfExport = true;
             }
         } else {
-             pData.historialVersiones.push({
-                versionId: `v_auto_${Date.now()}`,
-                fechaHora: pData.fechaModificacion,
-                etiqueta: "Primera versión (Impresión)",
+            // Es la primera vez y no hay nada en el historial
+            pData.historialVersiones.push({
+                versionId: `v_pdf_${Date.now()}`,
+                fechaHora: new Date().toISOString(),
+                etiqueta: "Primera exportación",
                 isPdfExport: true,
                 snapshot: JSON.parse(JSON.stringify(pData))
             });
