@@ -2,6 +2,85 @@ import { db as nubeDB } from './firebase-config.js';
 import { localDB } from './db.js';
 
 document.addEventListener('DOMContentLoaded', () => {
+    
+    // ==========================================
+    // SISTEMA DE MODALES CUSTOM
+    // ==========================================
+    window.customConfirm = function(title, message, okText = "Aceptar", okColorBase = "bg-red-500", okColorHover = "hover:bg-red-600") {
+        return new Promise((resolve) => {
+            const modal = document.getElementById('modal-confirm');
+            const box = document.getElementById('modal-confirm-box');
+            const btnOk = document.getElementById('btn-modal-confirm-ok');
+            const btnCancel = document.getElementById('btn-modal-confirm-cancel');
+
+            document.getElementById('modal-confirm-title').textContent = title;
+            document.getElementById('modal-confirm-message').innerHTML = message;
+            
+            btnOk.textContent = okText;
+            btnOk.className = `px-4 py-2 rounded-lg font-bold text-white transition-colors shadow-sm ${okColorBase} ${okColorHover}`;
+
+            const cleanup = () => {
+                box.classList.remove('scale-100'); box.classList.add('scale-95');
+                modal.classList.remove('opacity-100'); modal.classList.add('opacity-0');
+                setTimeout(() => modal.classList.add('hidden'), 200);
+                btnOk.removeEventListener('click', onOk);
+                btnCancel.removeEventListener('click', onCancel);
+            };
+
+            const onOk = () => { cleanup(); resolve(true); };
+            const onCancel = () => { cleanup(); resolve(false); };
+
+            btnOk.addEventListener('click', onOk);
+            btnCancel.addEventListener('click', onCancel);
+
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                modal.classList.remove('opacity-0'); modal.classList.add('opacity-100');
+                box.classList.remove('scale-95'); box.classList.add('scale-100');
+            }, 10);
+        });
+    };
+
+    window.customPrompt = function(title, message, placeholder, defaultValue = "") {
+        return new Promise((resolve) => {
+            const modal = document.getElementById('modal-prompt');
+            const box = document.getElementById('modal-prompt-box');
+            const input = document.getElementById('modal-prompt-input');
+            const btnOk = document.getElementById('btn-modal-prompt-ok');
+            const btnCancel = document.getElementById('btn-modal-prompt-cancel');
+
+            document.getElementById('modal-prompt-title').textContent = title;
+            document.getElementById('modal-prompt-message').textContent = message;
+            input.placeholder = placeholder;
+            input.value = defaultValue;
+
+            const cleanup = () => {
+                box.classList.remove('scale-100'); box.classList.add('scale-95');
+                modal.classList.remove('opacity-100'); modal.classList.add('opacity-0');
+                setTimeout(() => modal.classList.add('hidden'), 200);
+                btnOk.removeEventListener('click', onOk);
+                btnCancel.removeEventListener('click', onCancel);
+                input.removeEventListener('keydown', onKey);
+            };
+
+            const onOk = () => { cleanup(); resolve(input.value.trim()); };
+            const onCancel = () => { cleanup(); resolve(null); };
+            const onKey = (e) => { if (e.key === 'Enter') onOk(); if (e.key === 'Escape') onCancel(); };
+
+            btnOk.addEventListener('click', onOk);
+            btnCancel.addEventListener('click', onCancel);
+            input.addEventListener('keydown', onKey);
+
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                modal.classList.remove('opacity-0'); modal.classList.add('opacity-100');
+                box.classList.remove('scale-95'); box.classList.add('scale-100');
+                input.focus();
+                input.select();
+            }, 10);
+        });
+    };
+
     const btnNuevo = document.getElementById('btn-nuevo-presupuesto');
 
     btnNuevo.addEventListener('click', async () => {
@@ -64,7 +143,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 <td class="p-5 text-zinc-500 text-sm whitespace-nowrap align-middle">${formatFecha(p.fechaModificacion)}</td>
                 <td class="p-5 align-middle">
                     <div class="flex items-center gap-2 mb-0.5">
-                        <input type="text" class="input-nombre-proyecto bg-transparent border border-transparent hover:border-zinc-300 focus:border-zinc-900 focus:bg-white focus:ring-2 focus:ring-zinc-900 rounded-md px-1.5 py-0.5 -ml-1.5 font-bold text-zinc-900 transition-all w-full max-w-sm text-base truncate outline-none" value="${nombreProyecto}" data-id="${p.id}" title="Haz clic para editar">
+                        <span class="font-bold text-zinc-900 text-base truncate max-w-[250px]" title="${nombreProyecto}">${nombreProyecto}</span>
+                        <button class="btn-editar-nombre text-zinc-400 hover:text-blue-600 transition-colors p-1 rounded hover:bg-blue-50" data-id="${p.id}" data-nombre="${nombreProyecto}" title="Editar nombre del proyecto">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
+                        </button>
                         ${badgeLocal}
                         ${badgeNube}
                     </div>
@@ -72,47 +154,70 @@ document.addEventListener('DOMContentLoaded', () => {
                 </td>
                 <td class="p-5 font-extrabold text-zinc-800 whitespace-nowrap align-middle">$${formatCLP(totalNeto)}</td>
                 <td class="p-5 text-right whitespace-nowrap align-middle">
-                    <button class="text-zinc-400 group-hover:text-zinc-900 font-bold transition-colors flex items-center justify-end w-full gap-1">
-                        Abrir
-                        <svg class="w-5 h-5 transition-transform group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
-                    </button>
+                    <div class="flex items-center justify-end gap-4">
+                        <button class="btn-eliminar-proyecto text-zinc-300 hover:text-red-500 transition-colors p-1" data-id="${p.id}" data-nombre="${nombreProyecto}" title="Eliminar proyecto">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                        </button>
+                        <div class="text-zinc-500 group-hover:text-zinc-900 font-bold transition-colors flex items-center gap-1">
+                            Abrir
+                            <svg class="w-5 h-5 transition-transform group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                        </div>
+                    </div>
                 </td>
             `;
 
-            // Navegar al editor si se hace clic en la fila (excepto en el input del nombre)
+            // Navegar al editor si se hace clic en la fila
             tr.addEventListener('click', (e) => {
-                if (e.target.classList.contains('input-nombre-proyecto')) return;
                 window.location.href = `editor.html?id=${p.id}`;
             });
 
             lista.appendChild(tr);
         });
 
-        // Lógica para guardar la edición del nombre del proyecto
-        document.querySelectorAll('.input-nombre-proyecto').forEach(input => {
-            // Evitar que el click en el input abra la fila
-            input.addEventListener('click', (e) => e.stopPropagation());
-            
-            // Guardar al perder el foco o presionar Enter
-            const guardarNombre = async (e) => {
-                const id = e.target.dataset.id;
-                const nuevoNombre = e.target.value.trim() || 'Proyecto sin nombre';
-                const presupuesto = await localDB.presupuestos.get(id);
+        // Lógica para GUARDAR NOMBRE usando el Modal Custom
+        document.querySelectorAll('.btn-editar-nombre').forEach(btn => {
+            btn.addEventListener('click', async (e) => {
+                e.stopPropagation(); // Evita que se abra el proyecto
+                const id = btn.dataset.id;
+                const nombreActual = btn.dataset.nombre;
                 
-                if (presupuesto && presupuesto.codigoProyecto !== nuevoNombre) {
-                    presupuesto.codigoProyecto = nuevoNombre;
-                    presupuesto.fechaModificacion = new Date().toISOString();
-                    await localDB.presupuestos.put(presupuesto);
-                    // Opcionalmente podemos volver a cargar para que suba al principio por la modificación:
-                    // cargarPresupuestos(); 
-                }
-            };
+                const nuevoNombre = await window.customPrompt(
+                    "Renombrar Proyecto", 
+                    "Modifica el nombre con el que identificarás este presupuesto:", 
+                    "Ej: Edificio Rivas Vicuña",
+                    nombreActual === "Proyecto sin nombre" ? "" : nombreActual
+                );
 
-            input.addEventListener('change', guardarNombre);
-            input.addEventListener('keydown', (e) => {
-                if (e.key === 'Enter') {
-                    e.preventDefault();
-                    input.blur(); // Dispara el evento change automáticamente
+                if (nuevoNombre !== null && nuevoNombre.trim() !== "") {
+                    const presupuesto = await localDB.presupuestos.get(id);
+                    if (presupuesto) {
+                        presupuesto.codigoProyecto = nuevoNombre.trim();
+                        presupuesto.fechaModificacion = new Date().toISOString();
+                        await localDB.presupuestos.put(presupuesto);
+                        cargarPresupuestos(); // Recargar tabla
+                    }
+                }
+            });
+        });
+
+        // Lógica para ELIMINAR PROYECTO usando el Modal Custom
+        document.querySelectorAll('.btn-eliminar-proyecto').forEach(btn => {
+            btn.addEventListener('click', async (e) => {
+                e.stopPropagation(); // Evita que se abra el proyecto
+                const id = btn.dataset.id;
+                const nombre = btn.dataset.nombre;
+                
+                const confirmado = await window.customConfirm(
+                    "Eliminar Presupuesto", 
+                    `¿Estás segura de que deseas eliminar permanentemente <b>"${nombre}"</b>?<br><br>Esta acción no se puede deshacer.`,
+                    "Sí, eliminar",
+                    "bg-red-500",
+                    "hover:bg-red-600"
+                );
+
+                if (confirmado) {
+                    await localDB.presupuestos.delete(id);
+                    cargarPresupuestos(); // Recargar tabla
                 }
             });
         });
