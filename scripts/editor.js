@@ -698,13 +698,26 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     });
 
+    // Función auxiliar para guardar datos silenciosamente (sin perder foco) y actualizar el historial/semáforo
+    async function guardarSilencioso() {
+        pData.fechaModificacion = new Date().toISOString();
+        await localDB.presupuestos.put(pData);
+        
+        const renderizarConFantasma = hayCambiosSinConfirmar();
+        renderizarRioVersiones(pData.historialVersiones, restaurarVersion, renderizarConFantasma, pData);
+        
+        indicarGuardando();
+        clearTimeout(timeoutGuardado);
+        timeoutGuardado = setTimeout(indicarGuardadoOK, 800);
+    }
+
     // Escuchar cambios y formatear en vivo
     itemsContainer.addEventListener('input', (e) => {
         // Renombrar Categoría / Ítem
         if (e.target.classList.contains('input-cat-titulo')) {
             const catIndex = e.target.dataset.cat;
             pData.items[catIndex].titulo = e.target.value;
-            localDB.presupuestos.put(pData); // Guardar silenciosamente sin perder foco
+            guardarSilencioso();
             return;
         }
 
@@ -747,11 +760,9 @@ document.addEventListener('DOMContentLoaded', async () => {
                         el.textContent = `Subtotal: $${formatCLP(pData.items[catIndex].subtotal)}`;
                     }
                 });
-                
-                localDB.presupuestos.put(pData);
-            } else {
-                localDB.presupuestos.put(pData);
             }
+            
+            guardarSilencioso();
         }
     });
 
@@ -764,7 +775,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             e.target.value = '';
         }
         recalcularTotales();
-        localDB.presupuestos.put(pData);
+        guardarSilencioso();
     });
 
     // Inicializar visualmente
