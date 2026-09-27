@@ -19,11 +19,16 @@
         /* Configuración de Impresión */
         @media print {
             @page {
-                margin: 0; /* Un margen de 0 desactiva la inyección automática de URL y Fecha del navegador */
-                size: letter portrait; /* Fuerza tamaño carta vertical */
+                margin: 1.5cm 1.5cm 2cm 1.5cm; /* Márgenes físicos reales para TODAS las páginas (Top, Right, Bottom, Left) */
+                size: letter portrait; 
             }
+            /* Ocultar encabezados y pies de página nativos del navegador */
+            @page :first { margin-top: 1.5cm; }
+            @page :left { margin-left: 1.5cm; }
+            @page :right { margin-right: 1.5cm; }
+            
             body {
-                margin: 1.5cm !important; /* Reestablecemos el margen físico interno para todas las páginas */
+                margin: 0 !important; /* El margen ahora lo pone la página física, no el body */
                 background: white !important;
                 background-image: none !important;
             }
@@ -36,6 +41,11 @@
             * {
                 -webkit-print-color-adjust: exact !important;
                 print-color-adjust: exact !important;
+            }
+            /* Reglas de corte para garantizar que no se corten tablas a la mitad */
+            tr, .mb-8 { 
+                page-break-inside: avoid;
+                break-inside: avoid;
             }
         }
     </style>
