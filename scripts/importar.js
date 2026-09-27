@@ -107,75 +107,109 @@ async function extraerTextoWord(file) {
 }
 
 function procesarDatos(texto, pData, guardarCallback) {
-    let subitemsProcesados = [];
+    const lineas = texto.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+    
+    let categoriasImportadas = [];
+    let categoriaActual = { titulo: "DATOS IMPORTADOS", subitems: [] };
+    let tituloPendiente = "DATOS IMPORTADOS";
 
-    // 1. Intentar parsear como JSON directo
-    try {
-        const json = JSON.parse(texto);
-        if (Array.isArray(json)) {
-            // Si es un array de objetos con formato similar a nuestros subitems
-            subitemsProcesados = json.map(item => ({
-                descripcion: item.descripcion || item.nombre || '',
-                detalle: item.detalle || '',
-                cantidad: parseFloat(item.cantidad) || 1,
-                unidad: item.unidad || 'unid',
-                precioUnitario: parseFloat(item.precioUnitario || item.precio) || 0,
-                precioTotal: 0
-            }));
+    // Parseo seguro de números formato Chile (Ej: 1.300 -> 1300 | 0,7 -> 0.7)
+    const parseNum = (str) => {
+        if (!str) return NaN;
+        let s = str.toString().trim();
+        if (s.includes(',')) {
+            s = s.replace(/\./g, '').replace(',', '.');
+        } else {
+            if ((s.match(/\./g) || []).length > 1) {
+                s = s.replace(/\./g, '');
+            } else if (/\.\d{3}$/.test(s)) {
+                s = s.replace('.', '');
+            }
         }
-    } catch(e) {
-        // No es JSON, procesar como Texto / TSV / CSV / Markdown (Heurística)
-        const lineas = texto.split('\n').filter(l => l.trim().length > 0);
+        return parseFloat(s);
+    };
+    const parsePrecio = (str) => parseInt(str.toString().replace(/[^0-9]/g, ''), 10) || 0;
 
-        lineas.forEach(linea => {
-            // Separar por tabulaciones (clásico al pegar de Excel/Word) o pipes (Markdown)
-            let columnas = linea.split('\t');
-            if (columnas.length < 2) columnas = linea.split('|').filter(c => c.trim().length > 0);
-            if (columnas.length < 2) columnas = [linea]; 
+    lineas.forEach(linea => {
+        let cols = linea.split('\t').map(c => c.trim()).filter(c => c !== '');
+        if (cols.length < 2) cols = linea.split('|').map(c => c.trim()).filter(c => c !== '');
+        cols = cols.filter(c => c !== '' && c !== '-');
 
-            columnas = columnas.map(c => c.trim());
-            
-            // Ignorar filas de encabezado comunes
-            if (columnas[0].toLowerCase().includes('nombre') || columnas[0].includes('---')) return;
+        // Posible título de categoría o texto basura
+        if (cols.length < 2) {
+            let posibleTitulo = linea.trim();
+            // Ignorar líneas muy largas (párrafos), totales, o números aislados
+            if (posibleTitulo.length > 65 || /total/i.test(posibleTitulo) || !isNaN(parseNum(posibleTitulo))) {
+                return; 
+            }
+            tituloPendiente = posibleTitulo;
+            return;
+        }
 
-            // Construir el artículo intentando deducir el orden (Nombre, Detalle, Cantidad, Unidad, Precio)
-            const art = {
-                descripcion: columnas[0] || '',
-                detalle: columnas[1] || '',
-                cantidad: 1,
-                unidad: 'unid',
-                precioUnitario: 0,
+        // Evaluar si es un Ítem usando Heurística Estricta
+        let art = null;
+        const numCol0 = parseNum(cols[0]);
+        const numCol2 = cols.length > 2 ? parseNum(cols[2]) : NaN;
+
+        // Formato 1 (Documento Word de la Moni): Cantidad | Unidad | Descripcion | Precio | Total
+        if (!isNaN(numCol0) && cols.length >= 3 && isNaN(parseNum(cols[1]))) {
+            art = {
+                descripcion: cols[2] || '',
+                detalle: '',
+                cantidad: numCol0,
+                unidad: cols[1] || 'unid',
+                precioUnitario: cols[3] ? parsePrecio(cols[3]) : 0,
                 precioTotal: 0
             };
+        } 
+        // Formato 2 (Excel Estándar App): Descripcion | Detalle | Cantidad | Unidad | Precio | Total
+        else if (!isNaN(numCol2) && isNaN(numCol0) && cols.length >= 4) {
+            art = {
+                descripcion: cols[0] || '',
+                detalle: cols[1] || '',
+                cantidad: numCol2,
+                unidad: cols[3] || 'unid',
+                precioUnitario: cols[4] ? parsePrecio(cols[4]) : 0,
+                precioTotal: 0
+            };
+        }
 
-            if (columnas.length >= 3) {
-                if (columnas.length >= 5) {
-                    // Formato completo de 5 columnas
-                    art.cantidad = parseFloat(columnas[2].replace(/[^0-9,.]/g, '').replace(',', '.')) || 1;
-                    art.unidad = columnas[3] || 'unid';
-                    art.precioUnitario = parseFloat(columnas[4].replace(/[^0-9]/g, '')) || 0;
-                } else {
-                    // Heurística simple: Asumimos que la última columna es el precio
-                    art.precioUnitario = parseFloat(columnas[columnas.length - 1].replace(/[^0-9]/g, '')) || 0;
-                }
+        // Si detectamos un ítem válido
+        if (art && !/nombre|descripci[óo]n/i.test(art.descripcion)) {
+            // Iniciar nueva categoría si teníamos un título pendiente
+            if (tituloPendiente && categoriaActual.subitems.length > 0) {
+                categoriasImportadas.push(categoriaActual);
+                categoriaActual = { titulo: tituloPendiente.toUpperCase(), subitems: [] };
+            } else if (tituloPendiente && categoriaActual.subitems.length === 0) {
+                categoriaActual.titulo = tituloPendiente.toUpperCase();
             }
             
-            subitemsProcesados.push(art);
-        });
+            categoriaActual.subitems.push(art);
+            tituloPendiente = null; // Título consumido
+        }
+    });
+
+    // Agregamos la última categoría procesada
+    if (categoriaActual.subitems.length > 0) {
+        categoriasImportadas.push(categoriaActual);
     }
 
-    if (subitemsProcesados.length > 0) {
-        // En lugar de sobreescribir todo, añadimos una nueva categoría
-        pData.items.push({
-            id: 'cat_import_' + Date.now(),
-            titulo: 'DATOS IMPORTADOS',
-            subitems: subitemsProcesados,
-            subtotal: 0
+    if (categoriasImportadas.length > 0) {
+        categoriasImportadas.forEach(cat => {
+            pData.items.push({
+                id: 'cat_import_' + Date.now() + Math.random().toString(36).substring(2, 6),
+                titulo: cat.titulo,
+                modo: 'simple', 
+                subitems: cat.subitems,
+                subgrupos: [],
+                subtotal: 0
+            });
         });
         
-        window.customAlert("Éxito", `Se extrajeron ${subitemsProcesados.length} elementos. Se ha creado una nueva categoría "DATOS IMPORTADOS" al final del presupuesto.`, "bg-emerald-500", "hover:bg-emerald-600");
+        const totalItems = categoriasImportadas.reduce((sum, cat) => sum + cat.subitems.length, 0);
+        window.customAlert("Importación Exitosa", `Se extrajeron <b>${totalItems} elementos</b> organizados automáticamente en <b>${categoriasImportadas.length} categorías</b>.`, "bg-emerald-500", "hover:bg-emerald-600");
         guardarCallback();
     } else {
-        window.customAlert("Error de Formato", "No se pudo reconocer la estructura de los datos. Asegúrate de copiar las columnas correctamente desde Excel.", "bg-red-500", "hover:bg-red-600");
+        window.customAlert("Atención", "No se detectaron elementos con formato de presupuesto (Cantidad, Unidad, Nombre, Precio) en el documento.", "bg-amber-500", "hover:bg-amber-600");
     }
 }
