@@ -196,17 +196,35 @@ document.addEventListener('DOMContentLoaded', async () => {
         lblSaludoNombre.textContent = valor !== '' ? valor : '[Nombre]';
     });
 
-    // 5. Evento de impresión (Crea versión automática)
+    // 5. Evento de impresión (Exportar)
     btnImprimir.addEventListener('click', async () => {
-        // Autoguardar un hito antes de imprimir
-        pData.historialVersiones.push({
-            versionId: `v_pdf_${Date.now()}`,
-            fechaHora: new Date().toISOString(),
-            etiqueta: "PDF Generado",
-            snapshot: JSON.parse(JSON.stringify(pData))
-        });
-        await guardarYRenderizar();
+        // Si hay una versión previa guardada manualmente, le añadimos el "badge" de exportado
+        if (pData.historialVersiones && pData.historialVersiones.length > 0) {
+            const ultimaVersion = pData.historialVersiones[pData.historialVersiones.length - 1];
+            // Solo lo marcamos si el documento no está "sucio" (si es igual a la última versión)
+            if (pData.fechaModificacion === ultimaVersion.fechaHora) {
+                ultimaVersion.isPdfExport = true;
+            } else {
+                // Si el documento está sucio, creamos un "Autoguardado antes de PDF" automático
+                pData.historialVersiones.push({
+                    versionId: `v_auto_${Date.now()}`,
+                    fechaHora: pData.fechaModificacion,
+                    etiqueta: "Autoguardado (Impresión)",
+                    isPdfExport: true,
+                    snapshot: JSON.parse(JSON.stringify(pData))
+                });
+            }
+        } else {
+             pData.historialVersiones.push({
+                versionId: `v_auto_${Date.now()}`,
+                fechaHora: pData.fechaModificacion,
+                etiqueta: "Primera versión (Impresión)",
+                isPdfExport: true,
+                snapshot: JSON.parse(JSON.stringify(pData))
+            });
+        }
         
+        await guardarYRenderizar();
         window.print();
     });
 
@@ -436,7 +454,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     </div>
                     
                     ${cat.subitems.length > 0 ? `
-                        <div class="overflow-x-auto mb-3">
+                        <div class="mb-3">
                             <table class="w-full text-left table-fixed">
                                 <thead>
                                     <tr class="text-xs text-zinc-500 uppercase tracking-wider">
@@ -689,19 +707,15 @@ document.addEventListener('DOMContentLoaded', async () => {
     
     [containerHeader, containerIntro, inputProyecto].forEach(contenedor => {
         if(!contenedor) return;
-        contenedor.addEventListener('input', (e) => {
-            indicarGuardando();
+        contenedor.addEventListener('input', async (e) => {
             if (e.target.id === 'fecha-input') pData.cliente.fecha = e.target.value;
             if (e.target.id === 'destinatario-input') pData.cliente.destinatario = e.target.value;
             if (e.target.id === 'constructora-input') pData.cliente.constructora = e.target.value;
             if (e.target.id === 'intro-texto') pData.encabezadoTexto = e.target.value;
             if (e.target.id === 'proyecto-input') pData.codigoProyecto = e.target.value;
             
-            pData.fechaModificacion = new Date().toISOString();
-            localDB.presupuestos.put(pData);
-            
-            clearTimeout(timeoutGuardado);
-            timeoutGuardado = setTimeout(indicarGuardadoOK, 800);
+            // Reutilizamos guardarYRenderizar para que el fantasma reaccione a los cambios del header
+            await guardarYRenderizar();
         });
     });
 
