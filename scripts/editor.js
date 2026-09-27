@@ -278,7 +278,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     // MODO VISTA PREVIA (TOAST Y ESTADO)
     // ==========================================
     const toastVistaPrevia = document.getElementById('toast-vista-previa');
-    const barraHerramientas = document.getElementById('barra-herramientas-principal');
+    // Encontramos la barra de herramientas principal dinámicamente si no tiene el ID exacto
+    const barraHerramientas = document.getElementById('barra-herramientas-principal') || document.querySelector('.mb-6.sticky'); 
     const lblVistaPreviaTexto = document.getElementById('lbl-vista-previa-texto');
     const btnCancelarVP = document.getElementById('btn-cancelar-vista-previa');
     const btnRestaurarVP = document.getElementById('btn-restaurar-vista-previa');
@@ -437,14 +438,16 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // Modo Edición Toggle
     const btnToggleEdit = document.getElementById('btn-toggle-edit');
-    btnToggleEdit.addEventListener('click', () => {
-        isEditMode = !isEditMode;
-        btnToggleEdit.classList.toggle('text-blue-600', isEditMode);
-        btnToggleEdit.classList.toggle('bg-blue-100', isEditMode);
-        btnToggleEdit.classList.toggle('text-zinc-500', !isEditMode);
-        btnToggleEdit.classList.toggle('bg-zinc-100', !isEditMode);
-        renderItemsHTML(pData, isEditMode); 
-    });
+    if (btnToggleEdit) {
+        btnToggleEdit.addEventListener('click', () => {
+            isEditMode = !isEditMode;
+            btnToggleEdit.classList.toggle('text-blue-600', isEditMode);
+            btnToggleEdit.classList.toggle('bg-blue-100', isEditMode);
+            btnToggleEdit.classList.toggle('text-zinc-500', !isEditMode);
+            btnToggleEdit.classList.toggle('bg-zinc-100', !isEditMode);
+            renderItemsHTML(pData, isEditMode); 
+        });
+    }
 
     // Lógica Dropdown Añadir Ítem
     const btnToggleCat = document.getElementById('btn-toggle-cat');
