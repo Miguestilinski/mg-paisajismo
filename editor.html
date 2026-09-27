@@ -47,6 +47,11 @@
                 page-break-inside: avoid;
                 break-inside: avoid;
             }
+            /* Evitar que el título quede huérfano al final de la página */
+            .titulo-presupuesto {
+                page-break-after: avoid !important;
+                break-after: avoid !important;
+            }
         }
     </style>
 </head>
@@ -151,7 +156,7 @@
                     </div>
                 </section>
 
-                <div class="text-center font-bold text-lg uppercase mb-6 underline">
+                <div class="text-center font-bold text-lg uppercase mb-6 underline titulo-presupuesto">
                     PRESUPUESTO DEL PAISAJISMO Y RIEGO <br>
                     <input type="text" id="proyecto-input" class="text-center w-full max-w-md mx-auto border border-zinc-300 bg-zinc-50 hover:bg-zinc-100 focus:bg-white focus:border-zinc-900 focus:ring-1 focus:ring-zinc-900 rounded-md p-2 mt-4 font-bold transition-colors print:border-0 print:bg-transparent print:p-0 print:mt-1" placeholder="NOMBRE DEL PROYECTO">
                 </div>
