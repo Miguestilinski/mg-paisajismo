@@ -596,7 +596,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (!vacia) indicarGuardando();
         
         recalcularTotales();
-        renderItemsHTML(pData, isEditMode);
+        renderItems();
         pData.fechaModificacion = new Date().toISOString();
         
         // Calculamos el nodo fantasma

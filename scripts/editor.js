@@ -2,9 +2,9 @@
 
 import { localDB } from '../db.js';
 import { renderizarRioVersiones } from '../versions.js';
-import { setupImport } from '../importar.js';
-import { setupModals } from '../utils/modals.js';
-import { renderItemsHTML, formatCLP, parseCLP } from './render.js';
+import { setupImport } from './importar.js';
+import { setupModals } from './modals.js';
+import { renderItemsHTML, formatCLP, parseCLP } from './editor-render.js';
 
 document.addEventListener('DOMContentLoaded', async () => {
     // 1. Validar ID de Presupuesto
