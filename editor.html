@@ -15,15 +15,32 @@
         /* Ajustes sutiles para que el calendario parezca nativo del diseño */
         .flatpickr-calendar { font-family: inherit; border: 1px solid #e4e4e7; box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1); }
         .flatpickr-day.selected { background: #18181b !important; border-color: #18181b !important; }
+        
+        /* Configuración de Impresión */
+        @media print {
+            @page {
+                margin: 2cm; /* Define márgenes fijos para la página */
+                size: portrait; /* Fuerza la orientación vertical */
+            }
+            body {
+                background: white !important; /* Fuerza fondo blanco */
+                background-image: none !important; /* Elimina la imagen de fondo */
+            }
+            * {
+                -webkit-print-color-adjust: exact !important; /* Mantiene colores exactos */
+                print-color-adjust: exact !important;
+            }
+        }
     </style>
 </head>
-<body class="bg-cover bg-center bg-fixed text-zinc-900 print:bg-none print:bg-white" style="background-image: url('./assets/fondo-1.jpg');">
+<body class="bg-cover bg-center bg-fixed text-zinc-900 print:bg-white" style="background-image: url('./assets/fondo-1.jpg');">
     
-    <div class="flex h-screen overflow-hidden bg-black/10 backdrop-blur-md print:h-auto print:overflow-visible print:block print:bg-transparent">
+    <div class="flex h-screen overflow-hidden bg-black/10 backdrop-blur-md print:bg-transparent print:h-auto print:overflow-visible print:block">
         
         <!-- Panel Principal (Contiene herramientas y hoja) -->
-        <main class="flex-1 overflow-y-auto p-8 print:p-0 print:bg-white print:overflow-visible print:h-auto print:block">            
-            
+        <!-- Quitamos los paddings (p-8 a p-0) en impresión porque el @page margin se encargará de ello -->
+        <main class="flex-1 overflow-y-auto p-8 print:p-0 print:overflow-visible print:h-auto print:block">            
+
             <!-- Contenedor Superior: Barra + Semáforo flotante -->
             <div class="mb-6 print:hidden sticky top-0 z-20">
                 
