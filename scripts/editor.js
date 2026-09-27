@@ -278,8 +278,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     // MODO VISTA PREVIA (TOAST Y ESTADO)
     // ==========================================
     const toastVistaPrevia = document.getElementById('toast-vista-previa');
-    // Encontramos la barra de herramientas principal dinámicamente si no tiene el ID exacto
-    const barraHerramientas = document.getElementById('barra-herramientas-principal') || document.querySelector('.mb-6.sticky'); 
+    const barraHerramientas = document.getElementById('barra-herramientas-principal'); 
     const lblVistaPreviaTexto = document.getElementById('lbl-vista-previa-texto');
     const btnCancelarVP = document.getElementById('btn-cancelar-vista-previa');
     const btnRestaurarVP = document.getElementById('btn-restaurar-vista-previa');
@@ -294,9 +293,13 @@ document.addEventListener('DOMContentLoaded', async () => {
         backupPDataTemporal = null;
         versionEnVistaPrevia = null;
         
-        barraHerramientas.classList.remove('opacity-0', 'pointer-events-none', '-translate-y-4');
-        toastVistaPrevia.classList.add('translate-y-24', 'opacity-0');
-        toastVistaPrevia.classList.remove('translate-y-0', 'opacity-100');
+        if (barraHerramientas) {
+            barraHerramientas.classList.remove('opacity-0', 'pointer-events-none', '-translate-y-4');
+        }
+        if (toastVistaPrevia) {
+            toastVistaPrevia.classList.add('translate-y-24', 'opacity-0');
+            toastVistaPrevia.classList.remove('translate-y-0', 'opacity-100');
+        }
         
         await guardarYRenderizar();
     };
@@ -317,9 +320,13 @@ document.addEventListener('DOMContentLoaded', async () => {
         versionEnVistaPrevia = versionMeta;
         
         // Mostrar Toast animado y atenuar barra superior
-        barraHerramientas.classList.add('opacity-0', 'pointer-events-none', '-translate-y-4');
-        toastVistaPrevia.classList.remove('translate-y-24', 'opacity-0');
-        toastVistaPrevia.classList.add('translate-y-0', 'opacity-100');
+        if (barraHerramientas) {
+            barraHerramientas.classList.add('opacity-0', 'pointer-events-none', '-translate-y-4');
+        }
+        if (toastVistaPrevia) {
+            toastVistaPrevia.classList.remove('translate-y-24', 'opacity-0');
+            toastVistaPrevia.classList.add('translate-y-0', 'opacity-100');
+        }
         
         lblVistaPreviaTexto.textContent = `Viendo "${versionMeta.etiqueta || 'Versión antigua'}".`;
         
