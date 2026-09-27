@@ -1,7 +1,7 @@
 // scripts/editor/core.js
 
-import { localDB } from '../db.js';
-import { renderizarRioVersiones } from '../versions.js';
+import { localDB } from './db.js';
+import { renderizarRioVersiones } from './versions.js';
 import { setupImport } from './importar.js';
 import { setupModals } from './modals.js';
 import { renderItemsHTML, formatCLP, parseCLP } from './editor-render.js';
