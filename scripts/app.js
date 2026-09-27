@@ -89,32 +89,35 @@ document.addEventListener('DOMContentLoaded', () => {
     const contadorResultados = document.getElementById('contador-resultados');
     
     let isGlobalEditMode = false;
-    let presupuestosMemoria = []; // Aquí guardaremos los presupuestos válidos tras la limpieza
+    let presupuestosMemoria = []; 
     let filtroTexto = "";
-    let filtroFechaSeleccionada = null; // Guardará el objeto Date si se selecciona
+    let filtroRangoFechas = []; // [DateStart, DateEnd]
 
-    // Inicializar Flatpickr para el filtro de fechas
+    // Inicializar Flatpickr en modo Rango
     const fpFiltro = flatpickr(inputFiltroFecha, {
+        mode: "range",
         locale: "es",
         dateFormat: "Y-m-d",
         altInput: true,
-        altFormat: "d M Y", 
+        altFormat: "d M", 
         allowInput: false,
-        onChange: function(selectedDates, dateStr, instance) {
-            if (selectedDates.length > 0) {
-                filtroFechaSeleccionada = selectedDates[0];
+        onChange: function(selectedDates) {
+            // Flatpickr envía 1 fecha cuando inicia la selección, y 2 cuando la termina.
+            if (selectedDates.length === 2) {
+                filtroRangoFechas = selectedDates;
                 btnLimpiarFecha.classList.remove('hidden');
-            } else {
-                filtroFechaSeleccionada = null;
+                renderizarTablaFiltrada();
+            } else if (selectedDates.length === 0) {
+                filtroRangoFechas = [];
                 btnLimpiarFecha.classList.add('hidden');
+                renderizarTablaFiltrada();
             }
-            renderizarTablaFiltrada();
         }
     });
 
     btnLimpiarFecha.addEventListener('click', () => {
         fpFiltro.clear();
-        filtroFechaSeleccionada = null;
+        filtroRangoFechas = [];
         btnLimpiarFecha.classList.add('hidden');
         renderizarTablaFiltrada();
     });
@@ -193,13 +196,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 (p.codigoProyecto && p.codigoProyecto.toLowerCase().includes(filtroTexto)) || 
                 (p.cliente?.constructora && p.cliente.constructora.toLowerCase().includes(filtroTexto));
             
-            // Filtro Fecha (Compara ignorando la hora)
+            // Filtro Rango de Fecha
             let matchFecha = true;
-            if (filtroFechaSeleccionada) {
+            if (filtroRangoFechas.length === 2) {
                 const fMod = new Date(p.fechaModificacion);
-                matchFecha = fMod.getFullYear() === filtroFechaSeleccionada.getFullYear() &&
-                             fMod.getMonth() === filtroFechaSeleccionada.getMonth() &&
-                             fMod.getDate() === filtroFechaSeleccionada.getDate();
+                // Reseteamos las horas para una comparación limpia por día
+                fMod.setHours(0,0,0,0);
+                const start = new Date(filtroRangoFechas[0]); start.setHours(0,0,0,0);
+                const end = new Date(filtroRangoFechas[1]); end.setHours(23,59,59,999);
+                
+                matchFecha = fMod >= start && fMod <= end;
             }
 
             return matchTexto && matchFecha;
