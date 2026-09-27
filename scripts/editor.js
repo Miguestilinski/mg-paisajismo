@@ -302,24 +302,20 @@ document.addEventListener('DOMContentLoaded', async () => {
         
         const ultimaVersion = pData.historialVersiones[pData.historialVersiones.length - 1];
         
-        // Comparamos solo los datos relevantes que el usuario edita, ignorando metadatos temporales
-        const currentData = {
-            cliente: pData.cliente,
-            codigoProyecto: pData.codigoProyecto,
-            encabezadoTexto: pData.encabezadoTexto,
-            items: pData.items,
-            totales: pData.totales
-        };
-        
-        const lastSnapshotData = {
-            cliente: ultimaVersion.snapshot.cliente,
-            codigoProyecto: ultimaVersion.snapshot.codigoProyecto,
-            encabezadoTexto: ultimaVersion.snapshot.encabezadoTexto,
-            items: ultimaVersion.snapshot.items,
-            totales: ultimaVersion.snapshot.totales
-        };
+        // Comparamos solo los datos relevantes que el usuario edita, ignorando metadatos temporales e historiales
+        // Convertimos a JSON para una comparación rápida y profunda.
+        const stringifyParaComparar = (data) => JSON.stringify({
+            cliente: data.cliente || {},
+            codigoProyecto: data.codigoProyecto || "",
+            encabezadoTexto: data.encabezadoTexto || "",
+            items: data.items || [],
+            totales: data.totales || {}
+        });
 
-        return JSON.stringify(currentData) !== JSON.stringify(lastSnapshotData);
+        const currentDataStr = stringifyParaComparar(pData);
+        const lastSnapshotDataStr = stringifyParaComparar(ultimaVersion.snapshot);
+
+        return currentDataStr !== lastSnapshotDataStr;
     }
 
     // --- Historial de Versiones (Hitos) ---
