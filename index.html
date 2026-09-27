@@ -7,8 +7,14 @@
     <link href="./styles/output.css" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
 
+    <!-- Flatpickr (Datepicker estilo Airbnb) -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+
     <style>
         body { font-family: 'Inter', sans-serif; }
+        /* Ajustes sutiles para que el calendario parezca nativo del diseño */
+        .flatpickr-calendar { font-family: inherit; border: 1px solid #e4e4e7; box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1); }
+        .flatpickr-day.selected { background: #18181b !important; border-color: #18181b !important; }
     </style>
 </head>
 <body>
@@ -113,6 +119,8 @@
     <script src="https://unpkg.com/dexie/dist/dexie.js"></script>
 
     <!-- Carga modular de JS -->
+     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script src="https://npmcdn.com/flatpickr/dist/l10n/es.js"></script>
     <script type="module" src="./scripts/firebase-config.js"></script>
     <script type="module" src="./scripts/versions.js"></script>
     <script type="module" src="./scripts/db.js"></script>
