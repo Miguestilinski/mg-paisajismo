@@ -26,10 +26,16 @@
                             <p class="text-zinc-600 text-lg mt-1 font-medium">Tus presupuestos recientes.</p>
                         </div>
                     </div>
-                    <button id="btn-nuevo-presupuesto" class="bg-zinc-900 hover:bg-zinc-800 text-white font-semibold py-3 px-6 rounded-xl shadow-lg transition-all hover:shadow-xl hover:-translate-y-0.5 flex items-center gap-2 text-lg">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
-                        Nuevo Presupuesto
-                    </button>
+                    <div class="flex items-center gap-3">
+                        <button id="btn-toggle-edicion-global" class="bg-white hover:bg-zinc-50 text-zinc-600 font-semibold py-3 px-4 rounded-xl shadow-sm border border-zinc-200 transition-all flex items-center gap-2 text-sm">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
+                            Editar Lista
+                        </button>
+                        <button id="btn-nuevo-presupuesto" class="bg-zinc-900 hover:bg-zinc-800 text-white font-semibold py-3 px-6 rounded-xl shadow-lg transition-all hover:shadow-xl hover:-translate-y-0.5 flex items-center gap-2 text-lg">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                            Nuevo Presupuesto
+                        </button>
+                    </div>
                 </header>
 
                 <div class="bg-white/90 rounded-xl shadow-sm border border-zinc-200/50 overflow-hidden">

@@ -82,6 +82,20 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     const btnNuevo = document.getElementById('btn-nuevo-presupuesto');
+    const btnToggleEdicionGlobal = document.getElementById('btn-toggle-edicion-global');
+    let isGlobalEditMode = false;
+
+    btnToggleEdicionGlobal.addEventListener('click', () => {
+        isGlobalEditMode = !isGlobalEditMode;
+        if (isGlobalEditMode) {
+            btnToggleEdicionGlobal.classList.add('bg-blue-50', 'text-blue-600', 'border-blue-200');
+            btnToggleEdicionGlobal.classList.remove('bg-white', 'text-zinc-600', 'border-zinc-200');
+        } else {
+            btnToggleEdicionGlobal.classList.remove('bg-blue-50', 'text-blue-600', 'border-blue-200');
+            btnToggleEdicionGlobal.classList.add('bg-white', 'text-zinc-600', 'border-zinc-200');
+        }
+        cargarPresupuestos(); // Recarga la tabla con el nuevo modo
+    });
 
     btnNuevo.addEventListener('click', async () => {
         const presupuestoActualId = `presupuesto_${Date.now()}`;
@@ -127,7 +141,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
         presupuestos.forEach(p => {
             const tr = document.createElement('tr');
-            tr.className = "hover:bg-zinc-50/80 transition-colors group cursor-pointer border-b border-zinc-100";
+            // Si está en modo edición, quitamos el cursor-pointer para que sepa que la fila completa ya no abre el editor
+            tr.className = `hover:bg-zinc-50/80 transition-colors group border-b border-zinc-100 ${!isGlobalEditMode ? 'cursor-pointer' : ''}`;
 
             // Lógica de Badges (Actualmente todos son locales, la lógica Nube se completará con Firebase)
             const badgeLocal = `<span class="bg-zinc-200 text-zinc-700 text-[10px] font-bold px-2 py-0.5 rounded-full inline-flex items-center gap-1 shadow-sm"><svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z"></path></svg> Local</span>`;
@@ -152,28 +167,29 @@ document.addEventListener('DOMContentLoaded', () => {
                     <div class="text-sm text-zinc-500 font-normal truncate max-w-sm">${nombreConstructora}</div>
                 </td>
                 <td class="p-5 font-extrabold text-zinc-800 whitespace-nowrap align-middle">$${formatCLP(totalNeto)}</td>
-                <td class="p-5 text-right whitespace-nowrap align-middle relative w-48">
-                    <!-- Contenedor por defecto: Texto "Abrir >" -->
-                    <div class="flex items-center justify-end w-full gap-1 text-zinc-500 group-hover:opacity-0 transition-opacity duration-200 font-semibold absolute inset-0 right-5 pointer-events-none">
-                        Abrir
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
-                    </div>
-                    
-                    <!-- Contenedor Hover: Botones de Acción -->
-                    <div class="flex items-center justify-end gap-3 opacity-0 group-hover:opacity-100 transition-opacity duration-200 absolute inset-0 right-5 bg-zinc-50/80 pr-2">
-                        <button class="btn-editar-nombre text-zinc-500 hover:text-blue-600 hover:bg-blue-50 transition-colors p-1.5 rounded-md flex items-center gap-1.5 text-sm font-medium" data-id="${p.id}" data-nombre="${nombreProyecto}">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
-                            Editar
-                        </button>
-                        <button class="btn-eliminar-proyecto text-zinc-400 hover:text-red-500 hover:bg-red-50 transition-colors p-1.5 rounded-md" data-id="${p.id}" data-nombre="${nombreProyecto}" title="Eliminar proyecto">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
-                        </button>
-                    </div>
+                <td class="p-5 text-right whitespace-nowrap align-middle w-48">
+                    ${!isGlobalEditMode ? `
+                        <div class="flex items-center justify-end w-full gap-1 text-zinc-400 group-hover:text-zinc-900 font-bold transition-colors">
+                            Abrir
+                            <svg class="w-5 h-5 transition-transform group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                        </div>
+                    ` : `
+                        <div class="flex items-center justify-end gap-3">
+                            <button class="btn-editar-nombre text-zinc-500 hover:text-blue-600 hover:bg-blue-50 transition-colors p-1.5 rounded-md flex items-center gap-1.5 text-sm font-medium" data-id="${p.id}" data-nombre="${nombreProyecto}">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
+                                Editar
+                            </button>
+                            <button class="btn-eliminar-proyecto text-zinc-400 hover:text-red-500 hover:bg-red-50 transition-colors p-1.5 rounded-md" data-id="${p.id}" data-nombre="${nombreProyecto}" title="Eliminar proyecto">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                            </button>
+                        </div>
+                    `}
                 </td>
             `;
 
-            // Navegar al editor si se hace clic en cualquier parte de la fila que NO sea un botón
+            // Navegar al editor SOLO si NO estamos en el modo edición global
             tr.addEventListener('click', (e) => {
+                if (isGlobalEditMode) return;
                 if (e.target.closest('button')) return;
                 window.location.href = `editor.html?id=${p.id}`;
             });
