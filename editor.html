@@ -35,12 +35,12 @@
                     </a>
                     
                     <div class="flex items-center gap-3">
-                        <button id="btn-pegar-riego" class="bg-zinc-100 hover:bg-zinc-200 border border-zinc-300 text-zinc-700 py-2 px-3 rounded-lg transition-colors flex items-center gap-2 shadow-sm" title="Importar Riego">
+                        <button id="btn-pegar-riego" class="bg-zinc-100 hover:bg-zinc-200 border border-zinc-300 text-zinc-700 py-2 px-3 rounded-lg transition-colors flex items-center gap-2 shadow-sm" title="Importar Datos">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
                             <span class="font-semibold text-sm">Importar</span>
                         </button>
 
-                        <button id="btn-guardar-version" class="bg-zinc-100 hover:bg-zinc-200 border border-zinc-300 text-zinc-700 py-2 px-3 rounded-lg transition-colors shadow-sm" title="Guardar Versión Manual">
+                        <button id="btn-guardar-version" class="bg-zinc-100 hover:bg-zinc-200 border border-zinc-300 text-zinc-700 py-2 px-3 rounded-lg transition-colors flex items-center gap-2 shadow-sm" title="Guardar Versión Manual">
                             <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-save preview-icon"><path d="M15.2 3a2 2 0 0 1 1.4.6l3.8 3.8a2 2 0 0 1 .6 1.4V19a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z"/><path d="M17 21v-7a1 1 0 0 0-1-1H8a1 1 0 0 0-1 1v7"/><path d="M7 3v4a1 1 0 0 0 1 1h7"/></svg>
                             <span class="font-semibold text-sm">Guardar</span>
                         </button>
@@ -236,12 +236,12 @@
         </div>
     </div>
 
-    <!-- Modal Importar Riego -->
+    <!-- Modal Importar -->
     <div id="modal-importar" class="fixed inset-0 z-50 flex items-center justify-center hidden bg-zinc-900/40 backdrop-blur-sm print:hidden opacity-0 transition-opacity duration-200">
         <div class="bg-white/95 backdrop-blur-md border border-white/50 shadow-2xl rounded-2xl p-6 max-w-lg w-full mx-4 transform scale-95 transition-transform duration-200" id="modal-importar-box">
             <h3 class="text-lg font-bold text-zinc-900 mb-2 flex items-center gap-2">
                 <svg class="w-5 h-5 text-zinc-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
-                Importar Riego / Datos
+                Importar Datos
             </h3>
             <p class="text-zinc-600 mb-4 text-sm">Pega las celdas directamente desde Excel/Word, o sube un archivo JSON/Texto. El sistema extraerá los elementos y creará una nueva categoría.</p>
             
