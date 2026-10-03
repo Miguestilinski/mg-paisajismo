@@ -1,7 +1,8 @@
 import { db as nubeDB } from './firebase-config.js';
 import { localDB } from './db.js';
+import { initSync } from './sync.js';
 
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
     
     // ==========================================
     // SISTEMA DE MODALES CUSTOM
@@ -80,6 +81,9 @@ document.addEventListener('DOMContentLoaded', () => {
             }, 10);
         });
     };
+
+    // Inicializar sincronización en la página principal tras cargar los modales
+    await initSync();
 
     const btnNuevo = document.getElementById('btn-nuevo-presupuesto');
     const btnToggleEdicionGlobal = document.getElementById('btn-toggle-edicion-global');

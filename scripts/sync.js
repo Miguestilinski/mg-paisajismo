@@ -39,7 +39,7 @@ async function pedirClaveYLogear() {
         window.customAlert("Conectado", "Sincronización en la nube activada correctamente.", "bg-emerald-500", "hover:bg-emerald-600");
         return true;
     } catch (error) {
-        window.customAlert("Acceso Denegado", "Clave incorrecta. Trabajarás únicamente en el disco duro de este computador.", "bg-red-500", "hover:bg-red-600");
+        window.customAlert("Acceso Denegado", "Clave incorrecta. Trabajarás sin sincronización en la nube.", "bg-red-500", "hover:bg-red-600");
         return false;
     }
 }
