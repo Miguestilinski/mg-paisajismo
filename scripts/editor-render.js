@@ -93,8 +93,8 @@ export function renderItemsHTML(pData, isEditMode) {
         if (estaVacio && cat.subitems.length === 0 && cat.subgrupos.length === 0) {
             botonesInferiores = `
                 <div class="flex gap-3 print:hidden mt-2">
-                    <button class="btn-set-modo text-sm text-blue-600 hover:text-blue-800 font-bold bg-blue-50 hover:bg-blue-100 px-4 py-2 rounded-md transition-colors" data-cat="${catIndex}" data-modo="simple">+ Añadir Elementos</button>
-                    <button class="btn-set-modo text-sm text-indigo-600 hover:text-indigo-800 font-bold bg-indigo-50 hover:bg-indigo-100 px-4 py-2 rounded-md transition-colors" data-cat="${catIndex}" data-modo="compuesto">+ Añadir SubItems</button>
+                    <button class="btn-set-modo text-sm text-blue-600 hover:text-blue-800 font-bold bg-blue-50 hover:bg-blue-100 px-4 py-2 rounded-md transition-colors" data-cat="${catIndex}" data-modo="simple">+ Modo Simple (Añadir Elementos)</button>
+                    <button class="btn-set-modo text-sm text-indigo-600 hover:text-indigo-800 font-bold bg-indigo-50 hover:bg-indigo-100 px-4 py-2 rounded-md transition-colors" data-cat="${catIndex}" data-modo="compuesto">+ Modo Compuesto (Añadir Subítems)</button>
                 </div>
             `;
         } else if (cat.modo === 'simple') {
@@ -109,11 +109,11 @@ export function renderItemsHTML(pData, isEditMode) {
                         <div class="flex justify-between items-center mb-4">
                             <input type="text" class="input-subg-titulo font-bold text-[15px] text-zinc-600 bg-transparent border-0 p-0 focus:ring-0 ${isEditMode ? 'border border-zinc-300 bg-zinc-50 cursor-text rounded-md px-2 py-1 -ml-2' : 'pointer-events-none cursor-default'}" data-cat="${catIndex}" data-subg="${subgIndex}" value="${subg.tituloSubgrupo || ''}" placeholder="Ej. Tuberías">
                             <div class="flex gap-1 print:hidden ${isEditMode ? '' : 'hidden'}">
-                                <button class="btn-del-subg text-red-400 hover:text-red-600 p-1" data-cat="${catIndex}" data-subg="${subgIndex}" title="Eliminar Subgrupo"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg></button>
+                                <button class="btn-del-subg text-red-400 hover:text-red-600 p-1" data-cat="${catIndex}" data-subg="${subgIndex}" title="Eliminar Subítem"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg></button>
                             </div>
                         </div>
                         <div class="mb-3">${renderTabla(filasHtml, subg.subtotal)}</div>
-                        <button class="btn-add-art text-xs text-zinc-500 hover:text-zinc-900 font-bold print:hidden flex items-center gap-1 mt-1 bg-zinc-100 hover:bg-zinc-200 px-2 py-1 rounded transition-colors" data-cat="${catIndex}" data-subg="${subgIndex}">+ Añadir Elemento a Subgrupo</button>
+                        <button class="btn-add-art text-xs text-zinc-500 hover:text-zinc-900 font-bold print:hidden flex items-center gap-1 mt-1 bg-zinc-100 hover:bg-zinc-200 px-2 py-1 rounded transition-colors" data-cat="${catIndex}" data-subg="${subgIndex}">+ Añadir Elemento</button>
                     </div>
                 `;
             }).join('');
@@ -126,7 +126,7 @@ export function renderItemsHTML(pData, isEditMode) {
                     </div>
                 </div>
             `;
-            botonesInferiores = `<button class="btn-add-subg text-sm text-indigo-600 hover:text-indigo-900 font-bold print:hidden flex items-center gap-1 mt-4 bg-indigo-50 hover:bg-indigo-100 px-3 py-1.5 rounded transition-colors" data-cat="${catIndex}">+ Añadir Nuevo Subgrupo</button>`;
+            botonesInferiores = `<button class="btn-add-subg text-sm text-indigo-600 hover:text-indigo-900 font-bold print:hidden flex items-center gap-1 mt-4 bg-indigo-50 hover:bg-indigo-100 px-3 py-1.5 rounded transition-colors" data-cat="${catIndex}">+ Añadir Nuevo Subítem</button>`;
         }
 
         const catHtml = `

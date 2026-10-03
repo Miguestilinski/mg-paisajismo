@@ -138,6 +138,38 @@ export function syncToCloud(pData, indicadorCallback) {
             const dataLimpia = JSON.parse(JSON.stringify(pData));
             dataLimpia.ultimaSincronizacion = new Date().toISOString();
             
+            // Función auxiliar para comparar el estado actual con la última versión guardada
+            const hayCambiosSinConfirmar = () => {
+                if (!dataLimpia.historialVersiones || dataLimpia.historialVersiones.length === 0) return true;
+                const ultimaVersion = dataLimpia.historialVersiones[dataLimpia.historialVersiones.length - 1];
+                
+                const limpiarDataParaComparar = (data) => {
+                    if (!data) return {};
+                    const clean = {
+                        cliente: data.cliente || {},
+                        codigoProyecto: data.codigoProyecto || "",
+                        encabezadoTexto: data.encabezadoTexto || "",
+                        items: JSON.parse(JSON.stringify(data.items || [])),
+                        totales: data.totales || {}
+                    };
+                    return JSON.stringify(clean);
+                };
+                return limpiarDataParaComparar(dataLimpia) !== limpiarDataParaComparar(ultimaVersion.snapshot);
+            };
+
+            // Si hay un borrador activo (diferente a la última versión manual), lo agregamos como nodo temporal para la nube
+            if (hayCambiosSinConfirmar()) {
+                const snapshotActual = JSON.parse(JSON.stringify(dataLimpia));
+                delete snapshotActual.historialVersiones; // Evitamos recursión infinita de historial dentro del snapshot
+                
+                dataLimpia.historialVersiones.push({
+                    versionId: `v_auto_${Date.now()}`,
+                    fechaHora: new Date().toISOString(),
+                    etiqueta: "Autoguardado en Nube",
+                    snapshot: snapshotActual
+                });
+            }
+            
             // Referencia a presupuestos/{id} en Realtime Database
             const dbRef = ref(db, 'presupuestos/' + dataLimpia.id);
             await set(dbRef, dataLimpia);

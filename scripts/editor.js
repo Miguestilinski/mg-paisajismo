@@ -587,19 +587,48 @@ document.addEventListener('DOMContentLoaded', async () => {
             pData.items[catIndex].modo = modo;
             
             if (modo === 'compuesto') {
-                pData.items[catIndex].subgrupos.push({ id: 'sub_' + Date.now(), tituloSubgrupo: "Nuevo Subgrupo", subitems: [], subtotal: 0 });
+                pData.items[catIndex].subgrupos.push({ id: 'sub_' + Date.now(), tituloSubgrupo: "", subitems: [], subtotal: 0 });
+                
+                recalcularTotales();
+                renderItemsHTML(pData, isEditMode);
+                
+                const newTitleInput = document.querySelector(`.input-subg-titulo[data-cat="${catIndex}"][data-subg="0"]`);
+                if (newTitleInput) {
+                    newTitleInput.focus();
+                    newTitleInput.select();
+                    newTitleInput.classList.add('ring-2', 'ring-indigo-300', 'bg-white');
+                    setTimeout(() => newTitleInput.classList.remove('ring-2', 'ring-indigo-300', 'bg-white'), 1500);
+                }
+                guardarSilencioso();
             } else {
                 pData.items[catIndex].subitems.push({ descripcion: "", detalle: "", cantidad: "", unidad: "unid", precioUnitario: "", precioTotal: 0 });
+                guardarYRenderizar();
             }
-            guardarYRenderizar();
             return;
         }
 
         // Añadir/Eliminar Subgrupo
         if (btnAddSubg) {
             const catIndex = btnAddSubg.dataset.cat;
-            pData.items[catIndex].subgrupos.push({ id: 'sub_' + Date.now(), tituloSubgrupo: "Nuevo Subgrupo", subitems: [], subtotal: 0 });
-            guardarYRenderizar();
+            pData.items[catIndex].subgrupos.push({ id: 'sub_' + Date.now(), tituloSubgrupo: "", subitems: [], subtotal: 0 });
+            
+            // Re-render synchronously to guarantee the DOM elements exist immediately
+            recalcularTotales();
+            renderItemsHTML(pData, isEditMode);
+            
+            // Focus the newly created subgroup input
+            const newSubgIndex = pData.items[catIndex].subgrupos.length - 1;
+            const newTitleInput = document.querySelector(`.input-subg-titulo[data-cat="${catIndex}"][data-subg="${newSubgIndex}"]`);
+            if (newTitleInput) {
+                newTitleInput.focus();
+                newTitleInput.select();
+                // Optionally highlight the background briefly to guide the user's eye
+                newTitleInput.classList.add('ring-2', 'ring-indigo-300', 'bg-white');
+                setTimeout(() => newTitleInput.classList.remove('ring-2', 'ring-indigo-300', 'bg-white'), 1500);
+            }
+            
+            // Debounce the actual save to avoid writing an empty string to the DB immediately
+            guardarSilencioso();
             return;
         } else if (btnDelSubg) {
             const catIndex = btnDelSubg.dataset.cat;
