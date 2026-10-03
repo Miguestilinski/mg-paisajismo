@@ -44,6 +44,32 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (!pData.cliente) pData.cliente = {};
     if (!pData.historialVersiones) pData.historialVersiones = [];
 
+    // MIGRACIÓN ESTRUCTURAL INVISIBLE (Convierte datos viejos a la nueva nomenclatura)
+    pData.items.forEach(cat => {
+        if (cat.subitems && cat.subitems.length > 0 && !cat.elementos && (!cat.modo || cat.modo === 'simple')) {
+            cat.elementos = cat.subitems;
+            delete cat.subitems;
+        }
+        if (cat.subgrupos) {
+            cat.subitems = cat.subgrupos;
+            delete cat.subgrupos;
+        }
+        if (!cat.elementos) cat.elementos = [];
+        if (!cat.subitems) cat.subitems = [];
+        
+        cat.subitems.forEach(sub => {
+            if (sub.subitems && sub.subitems.length > 0 && !sub.elementos) {
+                sub.elementos = sub.subitems;
+                delete sub.subitems;
+            }
+            if (!sub.elementos) sub.elementos = [];
+            if (sub.tituloSubgrupo) {
+                sub.titulo = sub.tituloSubgrupo;
+                delete sub.tituloSubgrupo;
+            }
+        });
+    });
+
     let isEditMode = false; 
     let timeoutGuardado = null;
 
@@ -213,53 +239,63 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     function hayCambiosSinConfirmar() {
         if (isHojaVacia()) return false; 
-        if (pData.historialVersiones.length === 0) return true;
         
-        const ultimaVersion = pData.historialVersiones[pData.historialVersiones.length - 1];
+        // Filtramos para asegurarnos de comparar contra la última versión que NO sea un autoguardado de la nube
+        const versionesReales = (pData.historialVersiones || []).filter(v => v.etiqueta !== "Autoguardado en Nube");
+        if (versionesReales.length === 0) return true;
         
-        const stringifyParaComparar = (data) => JSON.stringify({
-            cliente: data.cliente || {},
-            codigoProyecto: data.codigoProyecto || "",
-            encabezadoTexto: data.encabezadoTexto || "",
-            items: data.items || [],
-            totales: data.totales || {}
-        });
+        const ultimaVersion = versionesReales[versionesReales.length - 1];
+        
+        const limpiarDataParaComparar = (data) => {
+            if (!data) return {};
+            const clean = {
+                cliente: data.cliente || {},
+                codigoProyecto: data.codigoProyecto || "",
+                encabezadoTexto: data.encabezadoTexto || "",
+                items: JSON.parse(JSON.stringify(data.items || [])),
+                totales: data.totales || {}
+            };
+            
+            clean.items.forEach(cat => {
+                if (!cat.modo) cat.modo = (cat.subitems && cat.subitems.length > 0) ? 'compuesto' : 'simple';
+                if (!cat.subitems) cat.subitems = [];
+                if (!cat.elementos) cat.elementos = [];
+            });
+            return JSON.stringify(clean);
+        };
 
-        return stringifyParaComparar(pData) !== stringifyParaComparar(ultimaVersion.snapshot);
+        return limpiarDataParaComparar(pData) !== limpiarDataParaComparar(ultimaVersion.snapshot);
     }
 
     function recalcularTotales() {
         let costoDirectoTotal = 0;
 
-        // Normalización estructural de los datos
         pData.items.forEach(cat => {
-            if (!cat.modo) cat.modo = (cat.subgrupos && cat.subgrupos.length > 0) ? 'compuesto' : 'simple';
-            if (!cat.subgrupos) cat.subgrupos = [];
+            if (!cat.modo) cat.modo = (cat.subitems && cat.subitems.length > 0) ? 'compuesto' : 'simple';
             if (!cat.subitems) cat.subitems = [];
+            if (!cat.elementos) cat.elementos = [];
             
             let catSubtotal = 0;
             
             if (cat.modo === 'simple') {
-                if (!cat.subitems) cat.subitems = [];
-                cat.subitems.forEach(art => {
+                cat.elementos.forEach(art => {
                     const cant = parseFloat(art.cantidad) || 0;
                     const precio = parseFloat(art.precioUnitario) || 0;
                     art.precioTotal = cant * precio;
                     catSubtotal += art.precioTotal;
                 });
             } else {
-                if (!cat.subgrupos) cat.subgrupos = [];
-                cat.subgrupos.forEach(subg => {
-                    let subgTotal = 0;
-                    if (!subg.subitems) subg.subitems = [];
-                    subg.subitems.forEach(art => {
+                cat.subitems.forEach(sub => {
+                    let subTotal = 0;
+                    if (!sub.elementos) sub.elementos = [];
+                    sub.elementos.forEach(art => {
                         const cant = parseFloat(art.cantidad) || 0;
                         const precio = parseFloat(art.precioUnitario) || 0;
                         art.precioTotal = cant * precio;
-                        subgTotal += art.precioTotal;
+                        subTotal += art.precioTotal;
                     });
-                    subg.subtotal = subgTotal;
-                    catSubtotal += subgTotal;
+                    sub.subtotal = subTotal;
+                    catSubtotal += subTotal;
                 });
             }
             
@@ -541,6 +577,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         pData.items.push({
             id: 'cat_' + Date.now(),
             titulo: nombre.toUpperCase(),
+            elementos: [],
             subitems: [],
             subtotal: 0
         });
@@ -559,7 +596,13 @@ document.addEventListener('DOMContentLoaded', async () => {
         const btnUnidad = e.target.closest('.opcion-unidad');
         if (btnUnidad) {
             const tr = btnUnidad.closest('tr');
-            pData.items[tr.dataset.cat].subitems[tr.dataset.art].unidad = btnUnidad.dataset.valor;
+            // Dependiendo del modo, actualizamos la unidad en 'elementos'
+            const catIndex = tr.dataset.cat;
+            const subIndex = tr.dataset.subitem;
+            const artIndex = tr.dataset.art;
+            const targetArray = subIndex !== undefined ? pData.items[catIndex].subitems[subIndex].elementos : pData.items[catIndex].elementos;
+            
+            targetArray[artIndex].unidad = btnUnidad.dataset.valor;
             guardarYRenderizar();
             return;
         }
@@ -577,8 +620,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         const btnUpArt = e.target.closest('.btn-up-art');
         const btnDownArt = e.target.closest('.btn-down-art');
         const btnSetModo = e.target.closest('.btn-set-modo');
-        const btnAddSubg = e.target.closest('.btn-add-subg');
-        const btnDelSubg = e.target.closest('.btn-del-subg');
+        const btnAddSubitem = e.target.closest('.btn-add-subitem');
+        const btnDelSubitem = e.target.closest('.btn-del-subitem');
 
         // Establecer Modo (Simple o Compuesto)
         if (btnSetModo) {
@@ -587,12 +630,12 @@ document.addEventListener('DOMContentLoaded', async () => {
             pData.items[catIndex].modo = modo;
             
             if (modo === 'compuesto') {
-                pData.items[catIndex].subgrupos.push({ id: 'sub_' + Date.now(), tituloSubgrupo: "", subitems: [], subtotal: 0 });
+                pData.items[catIndex].subitems.push({ id: 'sub_' + Date.now(), titulo: "", elementos: [], subtotal: 0 });
                 
                 recalcularTotales();
                 renderItemsHTML(pData, isEditMode);
                 
-                const newTitleInput = document.querySelector(`.input-subg-titulo[data-cat="${catIndex}"][data-subg="0"]`);
+                const newTitleInput = document.querySelector(`.input-subitem-titulo[data-cat="${catIndex}"][data-subitem="0"]`);
                 if (newTitleInput) {
                     newTitleInput.focus();
                     newTitleInput.select();
@@ -601,51 +644,46 @@ document.addEventListener('DOMContentLoaded', async () => {
                 }
                 guardarSilencioso();
             } else {
-                pData.items[catIndex].subitems.push({ descripcion: "", detalle: "", cantidad: "", unidad: "unid", precioUnitario: "", precioTotal: 0 });
+                pData.items[catIndex].elementos.push({ descripcion: "", detalle: "", cantidad: "", unidad: "unid", precioUnitario: "", precioTotal: 0 });
                 guardarYRenderizar();
             }
             return;
         }
 
-        // Añadir/Eliminar Subgrupo
-        if (btnAddSubg) {
-            const catIndex = btnAddSubg.dataset.cat;
-            pData.items[catIndex].subgrupos.push({ id: 'sub_' + Date.now(), tituloSubgrupo: "", subitems: [], subtotal: 0 });
+        // Añadir/Eliminar Subítem
+        if (btnAddSubitem) {
+            const catIndex = btnAddSubitem.dataset.cat;
+            pData.items[catIndex].subitems.push({ id: 'sub_' + Date.now(), titulo: "", elementos: [], subtotal: 0 });
             
-            // Re-render synchronously to guarantee the DOM elements exist immediately
             recalcularTotales();
             renderItemsHTML(pData, isEditMode);
             
-            // Focus the newly created subgroup input
-            const newSubgIndex = pData.items[catIndex].subgrupos.length - 1;
-            const newTitleInput = document.querySelector(`.input-subg-titulo[data-cat="${catIndex}"][data-subg="${newSubgIndex}"]`);
+            const newSubIndex = pData.items[catIndex].subitems.length - 1;
+            const newTitleInput = document.querySelector(`.input-subitem-titulo[data-cat="${catIndex}"][data-subitem="${newSubIndex}"]`);
             if (newTitleInput) {
                 newTitleInput.focus();
                 newTitleInput.select();
-                // Optionally highlight the background briefly to guide the user's eye
                 newTitleInput.classList.add('ring-2', 'ring-indigo-300', 'bg-white');
                 setTimeout(() => newTitleInput.classList.remove('ring-2', 'ring-indigo-300', 'bg-white'), 1500);
             }
-            
-            // Debounce the actual save to avoid writing an empty string to the DB immediately
             guardarSilencioso();
             return;
-        } else if (btnDelSubg) {
-            const catIndex = btnDelSubg.dataset.cat;
-            const subgIndex = btnDelSubg.dataset.subg;
-            pData.items[catIndex].subgrupos.splice(subgIndex, 1);
-            if (pData.items[catIndex].subgrupos.length === 0) pData.items[catIndex].modo = 'simple'; // Resetea si borras el último
+        } else if (btnDelSubitem) {
+            const catIndex = btnDelSubitem.dataset.cat;
+            const subIndex = btnDelSubitem.dataset.subitem;
+            pData.items[catIndex].subitems.splice(subIndex, 1);
+            if (pData.items[catIndex].subitems.length === 0) pData.items[catIndex].modo = 'simple'; // Resetea si borras el último
             guardarYRenderizar();
             return;
         }
 
         // Recuperar Arrays Correctos para Elementos
-        const getTargetArray = (cIdx, sIdx) => sIdx !== undefined ? pData.items[cIdx].subgrupos[sIdx].subitems : pData.items[cIdx].subitems;
+        const getTargetArray = (cIdx, sIdx) => sIdx !== undefined ? pData.items[cIdx].subitems[sIdx].elementos : pData.items[cIdx].elementos;
 
         if (btnAdd) {
             const catIndex = btnAdd.dataset.cat;
-            const subgIndex = btnAdd.dataset.subg;
-            const targetArray = getTargetArray(catIndex, subgIndex);
+            const subIndex = btnAdd.dataset.subitem;
+            const targetArray = getTargetArray(catIndex, subIndex);
             
             targetArray.push({
                 descripcion: "", detalle: "", cantidad: "", unidad: "unid", precioUnitario: "", precioTotal: 0
@@ -653,8 +691,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             guardarYRenderizar();
         } else if (btnDelArt) {
             const catIndex = parseInt(btnDelArt.dataset.cat);
-            const subgIndex = btnDelArt.dataset.subg;
-            getTargetArray(catIndex, subgIndex).splice(parseInt(btnDelArt.dataset.art), 1);
+            const subIndex = btnDelArt.dataset.subitem;
+            getTargetArray(catIndex, subIndex).splice(parseInt(btnDelArt.dataset.art), 1);
             guardarYRenderizar();
         } else if (btnDelCat) {
             const cIdx = parseInt(btnDelCat.dataset.cat);
@@ -682,7 +720,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
         } else if (btnUpArt) {
             const cIdx = parseInt(btnUpArt.dataset.cat);
-            const sIdx = btnUpArt.dataset.subg;
+            const sIdx = btnUpArt.dataset.subitem;
             const aIdx = parseInt(btnUpArt.dataset.art);
             const arr = getTargetArray(cIdx, sIdx);
             if (aIdx > 0) {
@@ -691,7 +729,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
         } else if (btnDownArt) {
             const cIdx = parseInt(btnDownArt.dataset.cat);
-            const sIdx = btnDownArt.dataset.subg;
+            const sIdx = btnDownArt.dataset.subitem;
             const aIdx = parseInt(btnDownArt.dataset.art);
             const arr = getTargetArray(cIdx, sIdx);
             if (aIdx < arr.length - 1) {
@@ -719,8 +757,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             guardarSilencioso();
             return;
         }
-        if (e.target.classList.contains('input-subg-titulo')) {
-            pData.items[e.target.dataset.cat].subgrupos[e.target.dataset.subg].tituloSubgrupo = e.target.value;
+        if (e.target.classList.contains('input-subitem-titulo')) {
+            pData.items[e.target.dataset.cat].subitems[e.target.dataset.subitem].titulo = e.target.value;
             guardarSilencioso();
             return;
         }
@@ -734,10 +772,10 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             const tr = e.target.closest('tr');
             const catIndex = tr.dataset.cat;
-            const subgIndex = tr.dataset.subg;
+            const subIndex = tr.dataset.subitem;
             const artIndex = tr.dataset.art;
             
-            const targetArray = subgIndex !== undefined ? pData.items[catIndex].subgrupos[subgIndex].subitems : pData.items[catIndex].subitems;
+            const targetArray = subIndex !== undefined ? pData.items[catIndex].subitems[subIndex].elementos : pData.items[catIndex].elementos;
             
             targetArray[artIndex][campo] = (campo === 'cantidad' || campo === 'precioUnitario') 
                 ? parseCLP(e.target.value) 
@@ -749,9 +787,9 @@ document.addEventListener('DOMContentLoaded', async () => {
                 
                 // Actualiza totales UI de forma eficiente
                 const contenedorRaiz = tr.closest('[data-cat-index]');
-                if (subgIndex !== undefined) {
-                    // Refresca el subtotal del subgrupo y el total de la categoría
-                    tr.closest(`[data-subg-index="${subgIndex}"]`).querySelector('.cat-subtotal').textContent = `$${formatCLP(pData.items[catIndex].subgrupos[subgIndex].subtotal)}`;
+                if (subIndex !== undefined) {
+                    // Refresca el subtotal del subítem y el total de la categoría
+                    tr.closest(`[data-subitem-index="${subIndex}"]`).querySelector('.cat-subtotal').textContent = `$${formatCLP(pData.items[catIndex].subitems[subIndex].subtotal)}`;
                     contenedorRaiz.querySelector(':scope > div > .cat-subtotal').textContent = `$${formatCLP(pData.items[catIndex].subtotal)}`;
                 } else {
                     contenedorRaiz.querySelector('.cat-subtotal').textContent = `$${formatCLP(pData.items[catIndex].subtotal)}`;

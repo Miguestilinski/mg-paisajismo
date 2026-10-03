@@ -138,10 +138,12 @@ export function syncToCloud(pData, indicadorCallback) {
             const dataLimpia = JSON.parse(JSON.stringify(pData));
             dataLimpia.ultimaSincronizacion = new Date().toISOString();
             
-            // Función auxiliar para comparar el estado actual con la última versión guardada
+            // Función auxiliar para comparar el estado actual con la última versión guardada (ignorando autoguardados previos)
             const hayCambiosSinConfirmar = () => {
-                if (!dataLimpia.historialVersiones || dataLimpia.historialVersiones.length === 0) return true;
-                const ultimaVersion = dataLimpia.historialVersiones[dataLimpia.historialVersiones.length - 1];
+                const versionesReales = (dataLimpia.historialVersiones || []).filter(v => v.etiqueta !== "Autoguardado en Nube");
+                if (versionesReales.length === 0) return true;
+                
+                const ultimaVersion = versionesReales[versionesReales.length - 1];
                 
                 const limpiarDataParaComparar = (data) => {
                     if (!data) return {};
@@ -157,25 +159,20 @@ export function syncToCloud(pData, indicadorCallback) {
                 return limpiarDataParaComparar(dataLimpia) !== limpiarDataParaComparar(ultimaVersion.snapshot);
             };
 
-            // Si hay un borrador activo (diferente a la última versión manual), lo agregamos como nodo temporal para la nube
+            // 1. Limpiamos cualquier autoguardado previo de la matriz para evitar duplicados
+            dataLimpia.historialVersiones = (dataLimpia.historialVersiones || []).filter(v => v.etiqueta !== "Autoguardado en Nube");
+
+            // 2. Si hay un borrador activo real, lo agregamos como un único nodo temporal al final
             if (hayCambiosSinConfirmar()) {
                 const snapshotActual = JSON.parse(JSON.stringify(dataLimpia));
-                delete snapshotActual.historialVersiones; // Evitamos recursión infinita de historial dentro del snapshot
+                delete snapshotActual.historialVersiones; 
                 
-                const autosaveNode = {
+                dataLimpia.historialVersiones.push({
                     versionId: `v_auto_${Date.now()}`,
                     fechaHora: new Date().toISOString(),
                     etiqueta: "Autoguardado en Nube",
                     snapshot: snapshotActual
-                };
-
-                const lastIndex = dataLimpia.historialVersiones.length - 1;
-                // If the last node is already an autosave, overwrite it. Otherwise, push a new one.
-                if (lastIndex >= 0 && dataLimpia.historialVersiones[lastIndex].etiqueta === "Autoguardado en Nube") {
-                    dataLimpia.historialVersiones[lastIndex] = autosaveNode;
-                } else {
-                    dataLimpia.historialVersiones.push(autosaveNode);
-                }
+                });
             }
             
             // Referencia a presupuestos/{id} en Realtime Database

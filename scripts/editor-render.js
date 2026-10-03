@@ -12,23 +12,22 @@ export function renderItemsHTML(pData, isEditMode) {
     let unidadesDisponibles = [...unidadesBase];
     pData.items.forEach(cat => {
         const arrElements = cat.modo === 'compuesto' 
-            ? (cat.subgrupos || []).flatMap(sg => sg.subitems || []) 
-            : (cat.subitems || []);
+            ? (cat.subitems || []).flatMap(sg => sg.elementos || []) 
+            : (cat.elementos || []);
         arrElements.forEach(art => {
             if (art.unidad && !unidadesDisponibles.includes(art.unidad)) unidadesDisponibles.push(art.unidad);
         });
     });
     
     pData.items.forEach((cat, catIndex) => {
-        // Inicializar modo si no existe (Retrocompatibilidad)
-        if (!cat.modo) cat.modo = (cat.subgrupos && cat.subgrupos.length > 0) ? 'compuesto' : 'simple';
-        if (!cat.subgrupos) cat.subgrupos = [];
+        if (!cat.modo) cat.modo = (cat.subitems && cat.subitems.length > 0) ? 'compuesto' : 'simple';
         if (!cat.subitems) cat.subitems = [];
+        if (!cat.elementos) cat.elementos = [];
 
-        const renderFila = (art, artIndex, subgIndex = null) => {
-            const dataSubgStr = subgIndex !== null ? `data-subg="${subgIndex}"` : '';
+        const renderFila = (art, artIndex, subIndex = null) => {
+            const dataSubStr = subIndex !== null ? `data-subitem="${subIndex}"` : '';
             return `
-                <tr class="group print:break-inside-avoid" data-cat="${catIndex}" data-art="${artIndex}" ${dataSubgStr}>
+                <tr class="group print:break-inside-avoid" data-cat="${catIndex}" data-art="${artIndex}" ${dataSubStr}>
                     <td class="pr-2 pb-2"><input type="text" class="input-art w-full border border-zinc-300 bg-zinc-50 hover:bg-zinc-100 focus:bg-white focus:border-zinc-900 rounded p-1.5 text-sm transition-colors print:border-0 print:bg-transparent print:p-0" data-campo="descripcion" value="${art.descripcion || ''}" placeholder="Ej. Quillay"></td>
                     <td class="pr-2 pb-2"><input type="text" class="input-art w-full border border-zinc-300 bg-zinc-50 hover:bg-zinc-100 focus:bg-white focus:border-zinc-900 rounded p-1.5 text-sm transition-colors print:border-0 print:bg-transparent print:p-0" data-campo="detalle" value="${art.detalle || ''}" placeholder="Ej. 2 mts"></td>
                     <td class="pr-2 pb-2"><input type="text" inputmode="numeric" class="input-art w-full border border-zinc-300 bg-zinc-50 hover:bg-zinc-100 focus:bg-white focus:border-zinc-900 rounded p-1.5 text-sm text-center transition-colors print:border-0 print:bg-transparent print:p-0" data-campo="cantidad" value="${art.cantidad ? formatCLP(art.cantidad) : ''}"></td>
@@ -48,10 +47,10 @@ export function renderItemsHTML(pData, isEditMode) {
                     <td class="pb-2 pl-4 w-28 align-middle print:hidden ${isEditMode ? '' : 'hidden'}">
                         <div class="flex items-center justify-end gap-2 pr-1">
                             <div class="flex flex-col">
-                                <button class="btn-up-art text-zinc-400 hover:text-zinc-800 p-0.5 disabled:opacity-30" data-cat="${catIndex}" data-art="${artIndex}" ${dataSubgStr} ${artIndex === 0 ? 'disabled' : ''}><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"></path></svg></button>
-                                <button class="btn-down-art text-zinc-400 hover:text-zinc-800 p-0.5 disabled:opacity-30" data-cat="${catIndex}" data-art="${artIndex}" ${dataSubgStr}><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg></button>
+                                <button class="btn-up-art text-zinc-400 hover:text-zinc-800 p-0.5 disabled:opacity-30" data-cat="${catIndex}" data-art="${artIndex}" ${dataSubStr} ${artIndex === 0 ? 'disabled' : ''}><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"></path></svg></button>
+                                <button class="btn-down-art text-zinc-400 hover:text-zinc-800 p-0.5 disabled:opacity-30" data-cat="${catIndex}" data-art="${artIndex}" ${dataSubStr}><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg></button>
                             </div>
-                            <button class="btn-del-art text-red-400 hover:text-red-600 transition-colors p-1" data-cat="${catIndex}" data-art="${artIndex}" ${dataSubgStr} title="Eliminar elemento"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg></button>
+                            <button class="btn-del-art text-red-400 hover:text-red-600 transition-colors p-1" data-cat="${catIndex}" data-art="${artIndex}" ${dataSubStr} title="Eliminar elemento"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg></button>
                         </div>
                     </td>
                 </tr>
@@ -87,10 +86,10 @@ export function renderItemsHTML(pData, isEditMode) {
 
         let bodyHtml = '';
         let botonesInferiores = '';
-        const estaVacio = cat.modo === 'simple' ? cat.subitems.length === 0 : cat.subgrupos.length === 0;
+        const estaVacio = cat.modo === 'simple' ? cat.elementos.length === 0 : cat.subitems.length === 0;
 
         // Si la categoría entera está vacía, mostramos los botones para definir el modo
-        if (estaVacio && cat.subitems.length === 0 && cat.subgrupos.length === 0) {
+        if (estaVacio && cat.elementos.length === 0 && cat.subitems.length === 0) {
             botonesInferiores = `
                 <div class="flex gap-3 print:hidden mt-2">
                     <button class="btn-set-modo text-sm text-blue-600 hover:text-blue-800 font-bold bg-blue-50 hover:bg-blue-100 px-4 py-2 rounded-md transition-colors" data-cat="${catIndex}" data-modo="simple">+ Modo Simple (Añadir Elementos)</button>
@@ -98,22 +97,22 @@ export function renderItemsHTML(pData, isEditMode) {
                 </div>
             `;
         } else if (cat.modo === 'simple') {
-            const filasHtml = cat.subitems.map((art, i) => renderFila(art, i, null)).join('');
+            const filasHtml = cat.elementos.map((art, i) => renderFila(art, i, null)).join('');
             bodyHtml = `<div class="mb-3">${renderTabla(filasHtml, cat.subtotal)}</div>`;
             botonesInferiores = `<button class="btn-add-art text-sm text-zinc-600 hover:text-zinc-900 font-bold print:hidden flex items-center gap-1 mt-2 bg-zinc-100 hover:bg-zinc-200 px-3 py-1.5 rounded transition-colors" data-cat="${catIndex}">+ Añadir Elemento</button>`;
         } else if (cat.modo === 'compuesto') {
-            bodyHtml = cat.subgrupos.map((subg, subgIndex) => {
-                const filasHtml = subg.subitems.map((art, i) => renderFila(art, i, subgIndex)).join('');
+            bodyHtml = cat.subitems.map((sub, subIndex) => {
+                const filasHtml = sub.elementos.map((art, i) => renderFila(art, i, subIndex)).join('');
                 return `
-                    <div class="mb-8 pl-4 border-l-[3px] border-zinc-200" data-cat-index="${catIndex}" data-subg-index="${subgIndex}">
+                    <div class="mb-8 pl-4 border-l-[3px] border-zinc-200" data-cat-index="${catIndex}" data-subitem-index="${subIndex}">
                         <div class="flex justify-between items-center mb-4">
-                            <input type="text" class="input-subg-titulo font-bold text-[15px] text-zinc-600 bg-transparent border-0 p-0 focus:ring-0 ${isEditMode ? 'border border-zinc-300 bg-zinc-50 cursor-text rounded-md px-2 py-1 -ml-2' : 'pointer-events-none cursor-default'}" data-cat="${catIndex}" data-subg="${subgIndex}" value="${subg.tituloSubgrupo || ''}" placeholder="Ej. Tuberías">
+                            <input type="text" class="input-subitem-titulo font-bold text-[15px] text-zinc-600 bg-transparent border-0 p-0 focus:ring-0 ${isEditMode ? 'border border-zinc-300 bg-zinc-50 cursor-text rounded-md px-2 py-1 -ml-2' : 'pointer-events-none cursor-default'}" data-cat="${catIndex}" data-subitem="${subIndex}" value="${sub.titulo || ''}" placeholder="Ej. Tuberías">
                             <div class="flex gap-1 print:hidden ${isEditMode ? '' : 'hidden'}">
-                                <button class="btn-del-subg text-red-400 hover:text-red-600 p-1" data-cat="${catIndex}" data-subg="${subgIndex}" title="Eliminar Subítem"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg></button>
+                                <button class="btn-del-subitem text-red-400 hover:text-red-600 p-1" data-cat="${catIndex}" data-subitem="${subIndex}" title="Eliminar Subítem"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg></button>
                             </div>
                         </div>
-                        <div class="mb-3">${renderTabla(filasHtml, subg.subtotal)}</div>
-                        <button class="btn-add-art text-xs text-zinc-500 hover:text-zinc-900 font-bold print:hidden flex items-center gap-1 mt-1 bg-zinc-100 hover:bg-zinc-200 px-2 py-1 rounded transition-colors" data-cat="${catIndex}" data-subg="${subgIndex}">+ Añadir Elemento</button>
+                        <div class="mb-3">${renderTabla(filasHtml, sub.subtotal)}</div>
+                        <button class="btn-add-art text-xs text-zinc-500 hover:text-zinc-900 font-bold print:hidden flex items-center gap-1 mt-1 bg-zinc-100 hover:bg-zinc-200 px-2 py-1 rounded transition-colors" data-cat="${catIndex}" data-subitem="${subIndex}">+ Añadir Elemento</button>
                     </div>
                 `;
             }).join('');
@@ -126,7 +125,7 @@ export function renderItemsHTML(pData, isEditMode) {
                     </div>
                 </div>
             `;
-            botonesInferiores = `<button class="btn-add-subg text-sm text-indigo-600 hover:text-indigo-900 font-bold print:hidden flex items-center gap-1 mt-4 bg-indigo-50 hover:bg-indigo-100 px-3 py-1.5 rounded transition-colors" data-cat="${catIndex}">+ Añadir Nuevo Subítem</button>`;
+            botonesInferiores = `<button class="btn-add-subitem text-sm text-indigo-600 hover:text-indigo-900 font-bold print:hidden flex items-center gap-1 mt-4 bg-indigo-50 hover:bg-indigo-100 px-3 py-1.5 rounded transition-colors" data-cat="${catIndex}">+ Añadir Nuevo Subítem</button>`;
         }
 
         const catHtml = `
