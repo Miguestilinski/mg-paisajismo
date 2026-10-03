@@ -20,4 +20,4 @@ const db = initializeFirestore(app, {
 });
 
 // Exportamos 'db' para usarlo en app.js y versions.js
-export { db };
+export { app, db };

@@ -1,10 +1,9 @@
 // scripts/sync.js
-import { getAuth, signInWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
-import { app } from './firebase-config.js'; 
+import { getAuth, signInWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-auth.js";
+import { doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-firestore.js";
+import { app, db } from './firebase-config.js'; 
 
 const auth = getAuth(app);
-const db = getFirestore(app);
 const EMAIL_MONI = "mg_paisajismo@hotmail.com";
 
 let debounceTimer;
