@@ -1,6 +1,6 @@
 // scripts/sync.js
 import { getAuth, signInWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-auth.js";
-import { doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-firestore.js";
+import { ref, set, get, child } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-database.js";
 import { app, db } from './firebase-config.js'; 
 
 const auth = getAuth(app);
@@ -138,12 +138,13 @@ export function syncToCloud(pData, indicadorCallback) {
             const dataLimpia = JSON.parse(JSON.stringify(pData));
             dataLimpia.ultimaSincronizacion = new Date().toISOString();
             
-            const docRef = doc(db, "presupuestos", dataLimpia.id);
-            await setDoc(docRef, dataLimpia);
+            // Referencia a presupuestos/{id} en Realtime Database
+            const dbRef = ref(db, 'presupuestos/' + dataLimpia.id);
+            await set(dbRef, dataLimpia);
             
             if (indicadorCallback) indicadorCallback('synced');
         } catch (error) {
-            console.error("Error sincronizando a Firebase:", error);
+            console.error("Error sincronizando a Firebase RTDB:", error);
             if (indicadorCallback) indicadorCallback('error');
         }
     }, 3000);
@@ -153,12 +154,13 @@ export function syncToCloud(pData, indicadorCallback) {
 export async function descargarDesdeNube(id) {
     if (!auth.currentUser) return null;
     try {
-        const docSnap = await getDoc(doc(db, "presupuestos", id));
-        if (docSnap.exists()) {
-            return docSnap.data();
+        const dbRef = ref(db);
+        const snapshot = await get(child(dbRef, `presupuestos/${id}`));
+        if (snapshot.exists()) {
+            return snapshot.val();
         }
     } catch (e) {
-        console.error("Error descargando de Firebase:", e);
+        console.error("Error descargando de Firebase RTDB:", e);
     }
     return null;
 }
