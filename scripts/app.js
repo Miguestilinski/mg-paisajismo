@@ -7,6 +7,41 @@ document.addEventListener('DOMContentLoaded', async () => {
     // ==========================================
     // SISTEMA DE MODALES CUSTOM
     // ==========================================
+    window.customAlert = function(title, message, okColorBase = "bg-zinc-800", okColorHover = "hover:bg-zinc-900") {
+        return new Promise((resolve) => {
+            const modal = document.getElementById('modal-alert');
+            const box = document.getElementById('modal-alert-box');
+            const btnOk = document.getElementById('btn-modal-alert-ok');
+
+            if (!modal) {
+                alert(title + ": " + message);
+                resolve();
+                return;
+            }
+
+            document.getElementById('modal-alert-title').textContent = title;
+            document.getElementById('modal-alert-message').innerHTML = message;
+            
+            btnOk.className = `px-5 py-2 rounded-lg font-bold text-white transition-colors shadow-sm ${okColorBase} ${okColorHover}`;
+
+            const cleanup = () => {
+                box.classList.remove('scale-100'); box.classList.add('scale-95');
+                modal.classList.remove('opacity-100'); modal.classList.add('opacity-0');
+                setTimeout(() => modal.classList.add('hidden'), 200);
+                btnOk.removeEventListener('click', onOk);
+            };
+
+            const onOk = () => { cleanup(); resolve(); };
+            btnOk.addEventListener('click', onOk);
+
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                modal.classList.remove('opacity-0'); modal.classList.add('opacity-100');
+                box.classList.remove('scale-95'); box.classList.add('scale-100');
+            }, 10);
+        });
+    };
+
     window.customConfirm = function(title, message, okText = "Aceptar", okColorBase = "bg-red-500", okColorHover = "hover:bg-red-600") {
         return new Promise((resolve) => {
             const modal = document.getElementById('modal-confirm');
