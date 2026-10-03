@@ -30,6 +30,9 @@ function pedirClaveYLogear() {
         const btnLogin = document.getElementById('btn-login');
         const btnOffline = document.getElementById('btn-offline');
         const lblError = document.getElementById('login-error-msg');
+        const btnTogglePwd = document.getElementById('btn-toggle-password');
+        const iconEye = document.getElementById('icon-eye');
+        const iconEyeOff = document.getElementById('icon-eye-off');
 
         if (!modal) {
             // Si por alguna razón no está el modal en el DOM (ej. en editor.html), forzamos offline temporal
@@ -49,7 +52,24 @@ function pedirClaveYLogear() {
             btnLogin.removeEventListener('click', onLogin);
             btnOffline.removeEventListener('click', onOffline);
             inputClave.removeEventListener('keydown', onKey);
+            if(btnTogglePwd) btnTogglePwd.removeEventListener('click', onTogglePwd);
+            
             inputClave.value = '';
+            inputClave.type = 'password';
+            if(iconEye) iconEye.classList.remove('hidden');
+            if(iconEyeOff) iconEyeOff.classList.add('hidden');
+        };
+
+        const onTogglePwd = () => {
+            if (inputClave.type === 'password') {
+                inputClave.type = 'text';
+                iconEye.classList.add('hidden');
+                iconEyeOff.classList.remove('hidden');
+            } else {
+                inputClave.type = 'password';
+                iconEye.classList.remove('hidden');
+                iconEyeOff.classList.add('hidden');
+            }
         };
 
         const onLogin = async () => {
@@ -88,6 +108,7 @@ function pedirClaveYLogear() {
         btnLogin.addEventListener('click', onLogin);
         btnOffline.addEventListener('click', onOffline);
         inputClave.addEventListener('keydown', onKey);
+        if(btnTogglePwd) btnTogglePwd.addEventListener('click', onTogglePwd);
 
         lblError.classList.add('hidden');
         modal.classList.remove('hidden');
