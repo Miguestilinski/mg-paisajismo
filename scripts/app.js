@@ -117,8 +117,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     };
 
-    // Inicializar sincronización en la página principal tras cargar los modales
-    await initSync();
+    // Inicializar sincronización en la página principal tras cargar los modales (Pide clave si no hay sesión)
+    await initSync({ askForPassword: true });
 
     const btnNuevo = document.getElementById('btn-nuevo-presupuesto');
     const btnToggleEdicionGlobal = document.getElementById('btn-toggle-edicion-global');

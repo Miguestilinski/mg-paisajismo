@@ -22,25 +22,20 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // 3. Variables Globales, Estado y Conexión Nube
     let pDataLocal = await localDB.presupuestos.get(id) || null;
+
+    // Conexión silenciosa: Verifica si ya hay sesión pero NO pide clave
+    const isOnline = await initSync({ askForPassword: false });
     
-    // El login ya se hizo (o no) en index.html, aquí solo verificamos silenciosamente si hay sesión para habilitar la nube
     let pDataNube = null;
-    let isOnline = false;
-    
-    try {
-        isOnline = await initSync(); 
-        if (isOnline) {
-            pDataNube = await descargarDesdeNube(id);
-        }
-    } catch(e) {
-        console.warn("Sincronización no disponible");
+    if (isOnline) {
+        pDataNube = await descargarDesdeNube(id);
     }
 
-    // Resolutor de conflictos: Gana la versión más reciente (Fecha de Modificación vs Última Sincronización)
+    // Resolutor de conflictos: Gana la versión más reciente
     let pData = { id: id };
     if (pDataNube && (!pDataLocal || new Date(pDataNube.ultimaSincronizacion) > new Date(pDataLocal.fechaModificacion || 0))) {
         pData = pDataNube;
-        await localDB.presupuestos.put(pData); // Actualiza la copia local con lo de la nube
+        await localDB.presupuestos.put(pData);
     } else if (pDataLocal) {
         pData = pDataLocal;
     }
@@ -50,7 +45,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (!pData.historialVersiones) pData.historialVersiones = [];
 
     let isEditMode = false; 
-    let timeoutGuardado = null; 
+    let timeoutGuardado = null;
 
     // Referencias UI Principales
     const inputDestinatario = document.getElementById('destinatario-input');

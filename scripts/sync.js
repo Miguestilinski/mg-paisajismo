@@ -8,15 +8,19 @@ const EMAIL_MONI = "mg_paisajismo@hotmail.com";
 
 let debounceTimer;
 
-// Inicializa la sesión y verifica si existe. Si no, pide la clave.
-export function initSync() {
+// Inicializa la sesión. Si options.askForPassword es true, pide clave. Si es false, verifica silenciosamente.
+export function initSync(options = { askForPassword: false }) {
     return new Promise((resolve) => {
         onAuthStateChanged(auth, async (user) => {
             if (user) {
                 resolve(true); // Ya hay una cookie/sesión válida
             } else {
-                const loggedIn = await pedirClaveYLogear();
-                resolve(loggedIn);
+                if (options.askForPassword) {
+                    const loggedIn = await pedirClaveYLogear();
+                    resolve(loggedIn);
+                } else {
+                    resolve(false); // Estamos offline pero en silencio
+                }
             }
         });
     });
