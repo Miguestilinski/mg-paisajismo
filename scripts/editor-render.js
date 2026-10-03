@@ -60,27 +60,29 @@ export function renderItemsHTML(pData, isEditMode) {
         const renderTabla = (htmlFilas, subtotal) => {
             if (!htmlFilas) return '';
             return `
-                <table class="w-full text-left table-fixed">
-                    <thead>
-                        <tr class="text-xs text-zinc-500 font-semibold uppercase tracking-wider border-b border-zinc-200">
-                            <th class="pb-2 w-[22%] pl-1">Nombre</th>
-                            <th class="pb-2 w-[22%]">Detalle</th>
-                            <th class="pb-2 w-[10%] text-center">Cant.</th>
-                            <th class="pb-2 w-[10%]">Unid.</th>
-                            <th class="pb-2 w-[15%] text-right">P. Unit</th>
-                            <th class="pb-2 w-[15%] text-right pr-1">Total</th>
-                            <th class="pb-2 w-28 pl-4 print:hidden ${isEditMode ? '' : 'hidden'}"></th>
-                        </tr>
-                    </thead>
-                    <tbody>${htmlFilas}</tbody>                     
-                    <tfoot>                                 
-                        <tr class="border-t border-zinc-900">                                         
-                            <td colspan="5" class="text-right py-3 pr-4 font-bold text-zinc-600">Subtotal:</td>                                         
-                            <td class="py-3 text-right font-bold text-zinc-900 cat-subtotal">$${formatCLP(subtotal)}</td>
-                            <td class="print:hidden ${isEditMode ? '' : 'hidden'}"></td>
-                        </tr>
-                    </tfoot>
-                </table>
+                <div class="overflow-x-auto -mx-5 px-5 sm:mx-0 sm:px-0 pb-2">
+                    <table class="w-full text-left table-fixed min-w-[650px] print:min-w-full">
+                        <thead>
+                            <tr class="text-xs text-zinc-500 font-semibold uppercase tracking-wider border-b border-zinc-200">
+                                <th class="pb-2 w-[22%] pl-1">Nombre</th>
+                                <th class="pb-2 w-[22%]">Detalle</th>
+                                <th class="pb-2 w-[10%] text-center">Cant.</th>
+                                <th class="pb-2 w-[10%]">Unid.</th>
+                                <th class="pb-2 w-[15%] text-right">P. Unit</th>
+                                <th class="pb-2 w-[15%] text-right pr-1">Total</th>
+                                <th class="pb-2 w-28 pl-4 print:hidden ${isEditMode ? '' : 'hidden'}"></th>
+                            </tr>
+                        </thead>
+                        <tbody>${htmlFilas}</tbody>                     
+                        <tfoot>                                 
+                            <tr class="border-t border-zinc-900">                                         
+                                <td colspan="5" class="text-right py-3 pr-4 font-bold text-zinc-600">Subtotal:</td>                                         
+                                <td class="py-3 text-right font-bold text-zinc-900 cat-subtotal">$${formatCLP(subtotal)}</td>
+                                <td class="print:hidden ${isEditMode ? '' : 'hidden'}"></td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
             `;
         };
 

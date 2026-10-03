@@ -165,28 +165,41 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // Toggle Historial Panel
     const btnToggleHistorial = document.getElementById('btn-toggle-historial');
+    const btnCerrarHistorialMovil = document.getElementById('btn-cerrar-historial-movil');
     const panelHistorial = document.getElementById('panel-historial');
+    
     let historialVisible = localStorage.getItem('historialVisible');
     historialVisible = historialVisible !== null ? JSON.parse(historialVisible) : true;
 
-    if (!historialVisible) {
-        panelHistorial.classList.add('w-0', 'border-0', 'opacity-0', 'duration-0');
-        panelHistorial.classList.remove('w-80', 'border-l');
-        setTimeout(() => panelHistorial.classList.remove('duration-0'), 100);
+    // En pantallas pequeñas, forzamos que inicie cerrado para no bloquear la pantalla
+    if (window.innerWidth < 768) {
+        historialVisible = false;
     }
 
-    btnToggleHistorial.addEventListener('click', () => {
-        historialVisible = !historialVisible;
-        localStorage.setItem('historialVisible', JSON.stringify(historialVisible));
+    const aplicarEstadoHistorial = (sinAnimacion = false) => {
+        if (sinAnimacion) panelHistorial.classList.add('duration-0');
         
         if (historialVisible) {
-            panelHistorial.classList.remove('w-0', 'border-0', 'opacity-0');
+            panelHistorial.classList.remove('w-0', 'border-0', 'opacity-0', 'pointer-events-none');
             panelHistorial.classList.add('w-80', 'border-l');
         } else {
-            panelHistorial.classList.add('w-0', 'border-0', 'opacity-0');
+            panelHistorial.classList.add('w-0', 'border-0', 'opacity-0', 'pointer-events-none');
             panelHistorial.classList.remove('w-80', 'border-l');
         }
-    });
+        
+        if (sinAnimacion) setTimeout(() => panelHistorial.classList.remove('duration-0'), 100);
+    };
+
+    aplicarEstadoHistorial(true);
+
+    const toggleHistorial = () => {
+        historialVisible = !historialVisible;
+        localStorage.setItem('historialVisible', JSON.stringify(historialVisible));
+        aplicarEstadoHistorial();
+    };
+
+    btnToggleHistorial.addEventListener('click', toggleHistorial);
+    if (btnCerrarHistorialMovil) btnCerrarHistorialMovil.addEventListener('click', toggleHistorial);
 
     // ==========================================
     // MOTOR DE GUARDADO Y SEMÁFORO
