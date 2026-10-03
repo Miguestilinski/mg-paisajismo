@@ -5,7 +5,7 @@ import { renderizarRioVersiones } from './versions.js';
 import { setupImport } from './importar.js';
 import { setupModals } from './modals.js';
 import { renderItemsHTML, formatCLP, parseCLP } from './editor-render.js';
-import { initSync, syncToCloud, descargarDesdeNube } from '../sync.js';
+import { initSync, syncToCloud, descargarDesdeNube } from './sync.js';
 
 document.addEventListener('DOMContentLoaded', async () => {
     // 1. Validar ID de Presupuesto
