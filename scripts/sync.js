@@ -162,12 +162,20 @@ export function syncToCloud(pData, indicadorCallback) {
                 const snapshotActual = JSON.parse(JSON.stringify(dataLimpia));
                 delete snapshotActual.historialVersiones; // Evitamos recursión infinita de historial dentro del snapshot
                 
-                dataLimpia.historialVersiones.push({
+                const autosaveNode = {
                     versionId: `v_auto_${Date.now()}`,
                     fechaHora: new Date().toISOString(),
                     etiqueta: "Autoguardado en Nube",
                     snapshot: snapshotActual
-                });
+                };
+
+                const lastIndex = dataLimpia.historialVersiones.length - 1;
+                // If the last node is already an autosave, overwrite it. Otherwise, push a new one.
+                if (lastIndex >= 0 && dataLimpia.historialVersiones[lastIndex].etiqueta === "Autoguardado en Nube") {
+                    dataLimpia.historialVersiones[lastIndex] = autosaveNode;
+                } else {
+                    dataLimpia.historialVersiones.push(autosaveNode);
+                }
             }
             
             // Referencia a presupuestos/{id} en Realtime Database
