@@ -93,8 +93,8 @@ export function renderItemsHTML(pData, isEditMode) {
         if (estaVacio && cat.subitems.length === 0 && cat.subgrupos.length === 0) {
             botonesInferiores = `
                 <div class="flex gap-3 print:hidden mt-2">
-                    <button class="btn-set-modo text-sm text-blue-600 hover:text-blue-800 font-bold bg-blue-50 hover:bg-blue-100 px-4 py-2 rounded-md transition-colors" data-cat="${catIndex}" data-modo="simple">+ Añadir Elementos Sueltos</button>
-                    <button class="btn-set-modo text-sm text-indigo-600 hover:text-indigo-800 font-bold bg-indigo-50 hover:bg-indigo-100 px-4 py-2 rounded-md transition-colors" data-cat="${catIndex}" data-modo="compuesto">+ Añadir Subgrupos</button>
+                    <button class="btn-set-modo text-sm text-blue-600 hover:text-blue-800 font-bold bg-blue-50 hover:bg-blue-100 px-4 py-2 rounded-md transition-colors" data-cat="${catIndex}" data-modo="simple">+ Añadir Elementos</button>
+                    <button class="btn-set-modo text-sm text-indigo-600 hover:text-indigo-800 font-bold bg-indigo-50 hover:bg-indigo-100 px-4 py-2 rounded-md transition-colors" data-cat="${catIndex}" data-modo="compuesto">+ Añadir SubItems</button>
                 </div>
             `;
         } else if (cat.modo === 'simple') {
