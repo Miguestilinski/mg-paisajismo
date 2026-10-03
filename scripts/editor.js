@@ -23,12 +23,17 @@ document.addEventListener('DOMContentLoaded', async () => {
     // 3. Variables Globales, Estado y Conexión Nube
     let pDataLocal = await localDB.presupuestos.get(id) || null;
     
-    // Iniciar conexión con Firebase (Pedirá clave si no hay sesión activa)
-    const isOnline = await initSync();
-    
+    // El login ya se hizo (o no) en index.html, aquí solo verificamos silenciosamente si hay sesión para habilitar la nube
     let pDataNube = null;
-    if (isOnline) {
-        pDataNube = await descargarDesdeNube(id);
+    let isOnline = false;
+    
+    try {
+        isOnline = await initSync(); 
+        if (isOnline) {
+            pDataNube = await descargarDesdeNube(id);
+        }
+    } catch(e) {
+        console.warn("Sincronización no disponible");
     }
 
     // Resolutor de conflictos: Gana la versión más reciente (Fecha de Modificación vs Última Sincronización)

@@ -22,26 +22,81 @@ export function initSync() {
     });
 }
 
-async function pedirClaveYLogear() {
-    const clave = await window.customPrompt(
-        "Seguridad de la Nube",
-        "Ingresa la clave maestra para activar la sincronización:",
-        "Contraseña"
-    );
-    
-    if (!clave) {
-        window.customAlert("Modo Local", "Trabajarás de forma local (Offline). Los datos no se respaldarán en la nube.", "bg-amber-500", "hover:bg-amber-600");
-        return false;
-    }
+function pedirClaveYLogear() {
+    return new Promise((resolve) => {
+        const modal = document.getElementById('modal-login');
+        const box = document.getElementById('modal-login-box');
+        const inputClave = document.getElementById('login-password');
+        const btnLogin = document.getElementById('btn-login');
+        const btnOffline = document.getElementById('btn-offline');
+        const lblError = document.getElementById('login-error-msg');
 
-    try {
-        await signInWithEmailAndPassword(auth, EMAIL_MONI, clave);
-        window.customAlert("Conectado", "Sincronización en la nube activada correctamente.", "bg-emerald-500", "hover:bg-emerald-600");
-        return true;
-    } catch (error) {
-        window.customAlert("Acceso Denegado", "Clave incorrecta. Trabajarás sin sincronización en la nube.", "bg-red-500", "hover:bg-red-600");
-        return false;
-    }
+        if (!modal) {
+            // Si por alguna razón no está el modal en el DOM (ej. en editor.html), forzamos offline temporal
+            resolve(false); 
+            return;
+        }
+
+        const mostrarAlerta = (titulo, mensaje, colorBase, colorHover) => {
+            if (typeof window.customAlert === 'function') window.customAlert(titulo, mensaje, colorBase, colorHover);
+            else alert(titulo + ": " + mensaje);
+        };
+
+        const cleanup = () => {
+            box.classList.remove('scale-100'); box.classList.add('scale-95');
+            modal.classList.remove('opacity-100'); modal.classList.add('opacity-0');
+            setTimeout(() => modal.classList.add('hidden'), 200);
+            btnLogin.removeEventListener('click', onLogin);
+            btnOffline.removeEventListener('click', onOffline);
+            inputClave.removeEventListener('keydown', onKey);
+            inputClave.value = '';
+        };
+
+        const onLogin = async () => {
+            const clave = inputClave.value.trim();
+            if (!clave) {
+                lblError.textContent = "Por favor, ingresa la clave.";
+                lblError.classList.remove('hidden');
+                return;
+            }
+
+            btnLogin.disabled = true;
+            btnLogin.innerHTML = `<svg class="animate-spin h-5 w-5 mr-2 inline" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Conectando...`;
+            
+            try {
+                await signInWithEmailAndPassword(auth, EMAIL_MONI, clave);
+                cleanup();
+                mostrarAlerta("Conectado", "Sincronización activada correctamente.", "bg-emerald-500", "hover:bg-emerald-600");
+                resolve(true);
+            } catch (error) {
+                console.error("Firebase Auth Error:", error.code);
+                btnLogin.disabled = false;
+                btnLogin.innerHTML = `Iniciar Sesión Seguro`;
+                lblError.textContent = "Clave incorrecta. Inténtalo de nuevo.";
+                lblError.classList.remove('hidden');
+            }
+        };
+
+        const onOffline = () => {
+            cleanup();
+            mostrarAlerta("Modo Local", "Trabajarás de forma local. Recuerda que si el equipo falla, los datos no estarán en la nube.", "bg-amber-500", "hover:bg-amber-600");
+            resolve(false);
+        };
+
+        const onKey = (e) => { if (e.key === 'Enter') onLogin(); };
+
+        btnLogin.addEventListener('click', onLogin);
+        btnOffline.addEventListener('click', onOffline);
+        inputClave.addEventListener('keydown', onKey);
+
+        lblError.classList.add('hidden');
+        modal.classList.remove('hidden');
+        setTimeout(() => {
+            modal.classList.remove('opacity-0'); modal.classList.add('opacity-100');
+            box.classList.remove('scale-95'); box.classList.add('scale-100');
+            inputClave.focus();
+        }, 10);
+    });
 }
 
 // Sincroniza los datos con Firebase usando Debounce (3 segundos)
