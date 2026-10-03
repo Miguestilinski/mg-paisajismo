@@ -5,6 +5,7 @@ import { renderizarRioVersiones } from './versions.js';
 import { setupImport } from './importar.js';
 import { setupModals } from './modals.js';
 import { renderItemsHTML, formatCLP, parseCLP } from './editor-render.js';
+import { initSync, syncToCloud, descargarDesdeNube } from '../sync.js';
 
 document.addEventListener('DOMContentLoaded', async () => {
     // 1. Validar ID de Presupuesto
@@ -19,8 +20,26 @@ document.addEventListener('DOMContentLoaded', async () => {
     // 2. Inicializar Modales Custom
     setupModals();
 
-    // 3. Variables Globales y Estado
-    let pData = await localDB.presupuestos.get(id) || {};
+    // 3. Variables Globales, Estado y Conexión Nube
+    let pDataLocal = await localDB.presupuestos.get(id) || null;
+    
+    // Iniciar conexión con Firebase (Pedirá clave si no hay sesión activa)
+    const isOnline = await initSync();
+    
+    let pDataNube = null;
+    if (isOnline) {
+        pDataNube = await descargarDesdeNube(id);
+    }
+
+    // Resolutor de conflictos: Gana la versión más reciente (Fecha de Modificación vs Última Sincronización)
+    let pData = { id: id };
+    if (pDataNube && (!pDataLocal || new Date(pDataNube.ultimaSincronizacion) > new Date(pDataLocal.fechaModificacion || 0))) {
+        pData = pDataNube;
+        await localDB.presupuestos.put(pData); // Actualiza la copia local con lo de la nube
+    } else if (pDataLocal) {
+        pData = pDataLocal;
+    }
+
     if (!pData.items) pData.items = [];
     if (!pData.cliente) pData.cliente = {};
     if (!pData.historialVersiones) pData.historialVersiones = [];
@@ -157,9 +176,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     function indicarGuardadoOK() {
-        semaforoUI.className = "flex items-center gap-2 px-3 py-1.5 bg-white/90 backdrop-blur-md rounded-full shadow-sm border border-zinc-200 text-xs font-medium text-emerald-600 transition-colors duration-300";
-        semaforoDot.className = "w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)] indicator-dot";
-        semaforoText.textContent = "Guardado";
+        semaforoUI.className = "flex items-center gap-2 px-3 py-1.5 bg-white/90 backdrop-blur-md rounded-full shadow-sm border border-zinc-200 text-xs font-medium text-zinc-600 transition-colors duration-300";
+        semaforoDot.className = "w-2 h-2 rounded-full bg-zinc-500 indicator-dot";
+        semaforoText.textContent = "Guardado local";
     }
 
     function indicarSinDatos() {
@@ -167,6 +186,23 @@ document.addEventListener('DOMContentLoaded', async () => {
         semaforoDot.className = "w-2 h-2 rounded-full bg-zinc-300 indicator-dot";
         semaforoText.textContent = "Sin datos";
     }
+
+    function indicarSincronizando() {
+        semaforoUI.className = "flex items-center gap-2 px-3 py-1.5 bg-white/90 backdrop-blur-md rounded-full shadow-sm border border-blue-200 text-xs font-medium text-blue-600 transition-colors duration-300";
+        semaforoDot.className = "w-2 h-2 rounded-full bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.6)] indicator-dot animate-pulse";
+        semaforoText.textContent = "Respaldando ☁️";
+    }
+
+    function indicarSincronizadoOK() {
+        semaforoUI.className = "flex items-center gap-2 px-3 py-1.5 bg-white/90 backdrop-blur-md rounded-full shadow-sm border border-emerald-200 text-xs font-medium text-emerald-600 transition-colors duration-300";
+        semaforoDot.className = "w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)] indicator-dot";
+        semaforoText.textContent = "Guardado en nube ☁️";
+    }
+
+    const manejadorSyncUI = (estado) => {
+        if (estado === 'syncing') indicarSincronizando();
+        if (estado === 'synced') setTimeout(indicarSincronizadoOK, 500); // Pequeño delay visual para que no salte brusco
+    };
 
     function isHojaVacia() {
         return (!pData.cliente?.destinatario && 
@@ -258,6 +294,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         renderizarRioVersiones(pData.historialVersiones, restaurarVersion, renderizarConFantasma, pData, versionEnVistaPrevia?.versionId);
         
         await localDB.presupuestos.put(pData);
+        if (!enModoVistaPrevia) syncToCloud(pData, manejadorSyncUI);
         
         clearTimeout(timeoutGuardado);
         if (vacia) {
@@ -270,6 +307,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     async function guardarSilencioso() {
         pData.fechaModificacion = new Date().toISOString();
         await localDB.presupuestos.put(pData);
+        if (!enModoVistaPrevia) syncToCloud(pData, manejadorSyncUI);
         
         const renderizarConFantasma = hayCambiosSinConfirmar();
         renderizarRioVersiones(pData.historialVersiones, restaurarVersion, renderizarConFantasma, pData, versionEnVistaPrevia?.versionId);
