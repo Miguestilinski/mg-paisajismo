@@ -4,7 +4,12 @@ import { ref, set, get, child } from "https://www.gstatic.com/firebasejs/10.9.0/
 import { app, db } from './firebase-config.js'; 
 
 const auth = getAuth(app);
-const EMAIL_MONI = "mg_paisajismo@hotmail.com";
+
+// Diccionario de usuarios permitidos
+const USERS = {
+    "moni": { email: "mg_paisajismo@hotmail.com", nombre: "Mónica" },
+    "roberto": { email: "robertomunozg@hotmail.com", nombre: "Roberto" }
+};
 
 let debounceTimer;
 
@@ -13,6 +18,11 @@ export function initSync(options = { askForPassword: false }) {
     return new Promise((resolve) => {
         onAuthStateChanged(auth, async (user) => {
             if (user) {
+                // Inferir el nombre del usuario basado en el email logueado y guardarlo localmente
+                const matchedUser = Object.values(USERS).find(u => u.email === user.email);
+                if (matchedUser) {
+                    localStorage.setItem('appUserName', matchedUser.nombre);
+                }
                 resolve(true); // Ya hay una cookie/sesión válida
             } else {
                 if (options.askForPassword) {
@@ -30,6 +40,7 @@ function pedirClaveYLogear() {
     return new Promise((resolve) => {
         const modal = document.getElementById('modal-login');
         const box = document.getElementById('modal-login-box');
+        const selectUsuario = document.getElementById('login-usuario');
         const inputClave = document.getElementById('login-password');
         const btnLogin = document.getElementById('btn-login');
         const btnOffline = document.getElementById('btn-offline');
@@ -38,8 +49,7 @@ function pedirClaveYLogear() {
         const iconEye = document.getElementById('icon-eye');
         const iconEyeOff = document.getElementById('icon-eye-off');
 
-        if (!modal) {
-            // Si por alguna razón no está el modal en el DOM (ej. en editor.html), forzamos offline temporal
+        if (!modal || !selectUsuario) {
             resolve(false); 
             return;
         }
@@ -77,9 +87,11 @@ function pedirClaveYLogear() {
         };
 
         const onLogin = async () => {
+            const usuarioKey = selectUsuario.value;
             const clave = inputClave.value.trim();
+            
             if (!clave) {
-                lblError.textContent = "Por favor, ingresa la clave.";
+                lblError.textContent = "Por favor, ingresa tu clave.";
                 lblError.classList.remove('hidden');
                 return;
             }
@@ -88,14 +100,15 @@ function pedirClaveYLogear() {
             btnLogin.innerHTML = `<svg class="animate-spin h-5 w-5 mr-2 inline" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Conectando...`;
             
             try {
-                await signInWithEmailAndPassword(auth, EMAIL_MONI, clave);
+                await signInWithEmailAndPassword(auth, USERS[usuarioKey].email, clave);
+                localStorage.setItem('appUserName', USERS[usuarioKey].nombre);
                 cleanup();
                 mostrarAlerta("Conectado", "Sincronización activada correctamente.", "bg-emerald-500", "hover:bg-emerald-600");
                 resolve(true);
             } catch (error) {
                 console.error("Firebase Auth Error:", error.code);
                 btnLogin.disabled = false;
-                btnLogin.innerHTML = `Iniciar Sesión Seguro`;
+                btnLogin.innerHTML = `Iniciar Sesión`;
                 lblError.textContent = "Clave incorrecta. Inténtalo de nuevo.";
                 lblError.classList.remove('hidden');
             }
@@ -185,6 +198,7 @@ export function syncToCloud(pData, indicadorCallback) {
                     versionId: `v_auto_${Date.now()}`,
                     fechaHora: new Date().toISOString(),
                     etiqueta: "Autoguardado en Nube",
+                    autor: localStorage.getItem('appUserName') || 'Usuario',
                     snapshot: snapshotActual
                 });
             }

@@ -145,7 +145,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     const inputFiltroFecha = document.getElementById('filtro-fecha');
     const btnLimpiarFecha = document.getElementById('btn-limpiar-fecha');
     const contadorResultados = document.getElementById('contador-resultados');
-    
+
+    // Actualizar Saludo basado en la sesión
+    const currentUserName = localStorage.getItem('appUserName') || 'Usuario';
+    const headerTitle = document.querySelector('header h1');
+    if (headerTitle) headerTitle.textContent = `Hola, ${currentUserName}`;
+
     let isGlobalEditMode = false;
     let presupuestosMemoria = []; 
     let filtroTexto = "";

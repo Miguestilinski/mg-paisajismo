@@ -89,6 +89,7 @@ export function renderizarRioVersiones(versiones, onRestoreCallback, mostrarFant
         }
 
         const badgePdf = ver.isPdfExport ? `<span class="ml-2 inline-flex items-center gap-1 rounded bg-zinc-800 px-1.5 py-0.5 text-[10px] font-bold text-white"><svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg> Exportado</span>` : '';
+        const badgeAutor = ver.autor ? `<span class="ml-2 inline-flex items-center text-[10px] font-medium text-indigo-500 bg-indigo-50 px-1.5 py-0.5 rounded-full border border-indigo-100">por ${ver.autor}</span>` : '';
 
         const nodoHtml = document.createElement('div');
         nodoHtml.className = `relative z-10 flex items-start mb-6 group cursor-pointer hover:bg-white p-2 -ml-2 rounded-lg transition-colors border ${isEnVistaPrevia ? 'border-amber-300 bg-amber-50/30' : 'border-transparent hover:border-zinc-200 hover:shadow-sm'}`;
@@ -102,8 +103,7 @@ export function renderizarRioVersiones(versiones, onRestoreCallback, mostrarFant
             </div>
             <div class="pl-10 w-full flex flex-col justify-center min-h-[14px]">
                 <p class="text-xs text-zinc-400 mb-0.5">${formatearHora(ver.fechaHora)}</p>
-                <p class="text-sm ${colorTexto} leading-tight flex flex-wrap items-center gap-y-1">${ver.etiqueta || 'Guardado manual'}${badgeActual}${badgePdf}</p>
-                ${instruccionSalida}
+                <p class="text-sm ${colorTexto} leading-tight flex flex-wrap items-center gap-y-1">${ver.etiqueta || 'Guardado manual'}${badgeActual}${badgePdf}${badgeAutor}</p>${instruccionSalida}
                 <div><p class="text-xs font-bold text-zinc-800 mt-1.5 bg-zinc-100 inline-block px-2 py-0.5 rounded">Neto: $${formatCLP(ver.snapshot.totales.totalNeto)}</p></div>
             </div>
         `;

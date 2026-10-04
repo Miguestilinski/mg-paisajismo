@@ -505,6 +505,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     });
 
+    // Helper para obtener el usuario actual
+    const getCurrentUser = () => localStorage.getItem('appUserName') || 'Usuario';
+
     // Guardado Manual (Botón Guardar)
     document.getElementById('btn-guardar-version').addEventListener('click', async () => {
         const etiqueta = await window.customPrompt(
@@ -520,6 +523,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             versionId: `v_${Date.now()}`,
             fechaHora: new Date().toISOString(),
             etiqueta: etiqueta || "Guardado manual",
+            autor: getCurrentUser(),
             snapshot: JSON.parse(JSON.stringify(pData)) 
         });
         await guardarYRenderizar(); 

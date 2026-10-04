@@ -19,6 +19,7 @@ export async function manejarExportacionPDF(pData, hayCambiosSinConfirmar, guard
                 versionId: `v_pdf_${Date.now()}`,
                 fechaHora: new Date().toISOString(),
                 etiqueta: "Autoguardado (Impresión)",
+                autor: localStorage.getItem('appUserName') || 'Usuario',
                 isPdfExport: true,
                 snapshot: snapshotLimpio
             });
@@ -33,6 +34,7 @@ export async function manejarExportacionPDF(pData, hayCambiosSinConfirmar, guard
             versionId: `v_pdf_${Date.now()}`,
             fechaHora: new Date().toISOString(),
             etiqueta: "Primera exportación",
+            autor: localStorage.getItem('appUserName') || 'Usuario',
             isPdfExport: true,
             snapshot: snapshotLimpio
         }];
