@@ -53,8 +53,8 @@ export function renderizarRioVersiones(versiones, onRestoreCallback, mostrarFant
         contenedor.appendChild(nodoFantasma);
     }
 
-    // Filtrar elementos nulos/indefinidos (huecos de Firebase) y ordenar del más nuevo al más viejo
-    const versionesValidas = (versiones || []).filter(v => v != null);
+    // Filtrar elementos nulos/indefinidos y ocultar los nodos de "Autoguardado en Nube" del historial visual
+    const versionesValidas = (versiones || []).filter(v => v != null && v.etiqueta !== "Autoguardado en Nube");
     const versionesOrdenadas = [...versionesValidas].sort((a, b) => new Date(b.fechaHora) - new Date(a.fechaHora));
 
     const stringifyParaComparar = (data) => {
