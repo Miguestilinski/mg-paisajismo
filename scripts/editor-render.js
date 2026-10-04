@@ -63,16 +63,16 @@ export function renderItemsHTML(pData, isEditMode) {
             const hookClass = isSubitem ? 'subitem-subtotal-val' : 'cat-subtotal';
             
             return `
-                <div class="overflow-x-auto -mx-5 px-5 sm:mx-0 sm:px-0 pb-2">
-                    <table class="w-full text-left table-fixed min-w-[650px] print:min-w-full">
+                <div class="overflow-x-auto -mx-5 px-5 sm:mx-0 sm:px-0 pb-2 print:overflow-visible print:mx-0 print:px-0">
+                    <table class="w-full text-left table-fixed min-w-[650px] print:min-w-0 print:w-full">
                         <thead>
                             <tr class="text-xs text-zinc-500 font-semibold uppercase tracking-wider border-b border-zinc-200">
-                                <th class="pb-2 w-[22%] pl-1">Nombre</th>
-                                <th class="pb-2 w-[22%]">Detalle</th>
-                                <th class="pb-2 w-[10%] text-center">Cant.</th>
-                                <th class="pb-2 w-[10%]">Unid.</th>
-                                <th class="pb-2 w-[15%] text-right">P. Unit</th>
-                                <th class="pb-2 w-[15%] text-right pr-1">Total</th>
+                                <th class="pb-2 pl-1" style="width: 25%;">Nombre</th>
+                                <th class="pb-2" style="width: 25%;">Detalle</th>
+                                <th class="pb-2 text-center" style="width: 10%;">Cant.</th>
+                                <th class="pb-2" style="width: 10%;">Unid.</th>
+                                <th class="pb-2 text-right" style="width: 15%;">P. Unit</th>
+                                <th class="pb-2 text-right pr-1" style="width: 15%;">Total</th>
                                 <th class="pb-2 w-28 pl-4 print:hidden ${isEditMode ? '' : 'hidden'}"></th>
                             </tr>
                         </thead>

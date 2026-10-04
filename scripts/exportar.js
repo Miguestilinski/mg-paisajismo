@@ -66,26 +66,32 @@ function prepararInputsParaImpresion() {
         let valor = input.value;
         const esVacio = valor.trim() === '';
         
-        // Si está vacío, le ponemos un espacio irrompible para mantener la altura y alineación en la tabla
-        if (esVacio) valor = '&nbsp;';
-        // Si es el detalle (que tiene placeholder pero no valor), lo dejamos vacío
+        // Si es el detalle (que tiene placeholder pero no valor), lo dejamos totalmente vacío
         if (esVacio && input.dataset.campo === 'detalle') valor = '';
+        // Si es cantidad o precio (numéricos) vacíos, dejamos vacío para que no salgan símbolos raros
+        else if (esVacio && input.dataset.campo !== 'descripcion') valor = '';
+        // Para textos generales vacíos, un espacio duro mantiene la altura de línea
+        else if (esVacio) valor = '&nbsp;';
 
-        const span = document.createElement(input.tagName.toLowerCase() === 'textarea' ? 'div' : 'span');
+        const span = document.createElement(input.tagName.toLowerCase() === 'textarea' ? 'div' : 'div');
         
-        // Copiamos clases críticas de alineación y tipografía, pero omitimos bordes, fondos y anchos forzados
-        const clasesParaCopiar = ['text-center', 'text-right', 'font-bold', 'text-sm', 'text-lg', 'font-semibold', 'w-full', 'pl-6'];
+        // Copiamos clases críticas de alineación y tipografía, omitiendo 'w-full' que rompe celdas de tabla
+        const clasesParaCopiar = ['text-center', 'text-right', 'font-bold', 'text-sm', 'text-lg', 'font-semibold', 'pl-6'];
         const clasesBase = input.className.split(' ').filter(c => clasesParaCopiar.includes(c)).join(' ');
         
-        // Estilos específicos para emular textarea
+        // Estilos específicos
         let estilosExtra = '';
         if (input.tagName.toLowerCase() === 'textarea') {
-            estilosExtra = 'whitespace-pre-wrap word-break-normal min-h-[120px] p-3';
-            // Si el textarea está vacío (y no es el saludo), lo colapsamos en la impresión
+            estilosExtra = 'whitespace-pre-wrap word-break-normal pt-2';
             if (esVacio) estilosExtra += ' hidden'; 
         } else {
-            // Padding equivalente al input para que no salte el texto
-            estilosExtra = 'p-1.5 inline-block'; 
+            // Un div bloque asegura que la alineación (text-right) funcione igual que en el input
+            estilosExtra = 'block w-full px-1.5 py-0.5 text-zinc-900 truncate'; 
+            
+            // Fix para los inputs de cantidad y precio (que tienen pl-6 por el signo $)
+            if(input.dataset.campo === 'precioUnitario') {
+                estilosExtra = estilosExtra.replace('px-1.5', '');
+            }
         }
 
         span.className = `${clasesBase} ${estilosExtra} print-text-element`;
