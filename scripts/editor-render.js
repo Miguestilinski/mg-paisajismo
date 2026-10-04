@@ -57,7 +57,7 @@ export function renderItemsHTML(pData, isEditMode) {
             `;
         };
 
-        const renderTabla = (htmlFilas, subtotal) => {
+        const renderTabla = (htmlFilas, subtotal, labelSubtotal = "Subtotal") => {
             if (!htmlFilas) return '';
             return `
                 <div class="overflow-x-auto -mx-5 px-5 sm:mx-0 sm:px-0 pb-2">
@@ -76,7 +76,7 @@ export function renderItemsHTML(pData, isEditMode) {
                         <tbody>${htmlFilas}</tbody>                     
                         <tfoot>                                 
                             <tr class="border-t border-zinc-900">                                         
-                                <td colspan="5" class="text-right py-3 pr-4 font-bold text-zinc-600">Subtotal:</td>                                         
+                                <td colspan="5" class="text-right py-3 pr-4 font-bold text-zinc-600">Subtotal ${labelSubtotal}:</td>                                         
                                 <td class="py-3 text-right font-bold text-zinc-900 cat-subtotal">$${formatCLP(subtotal)}</td>
                                 <td class="print:hidden ${isEditMode ? '' : 'hidden'}"></td>
                             </tr>
@@ -100,30 +100,30 @@ export function renderItemsHTML(pData, isEditMode) {
             `;
         } else if (cat.modo === 'simple') {
             const filasHtml = cat.elementos.map((art, i) => renderFila(art, i, null)).join('');
-            bodyHtml = `<div class="mb-3">${renderTabla(filasHtml, cat.subtotal)}</div>`;
+            bodyHtml = `<div class="mb-3">${renderTabla(filasHtml, cat.subtotal, cat.titulo)}</div>`;
             botonesInferiores = `<button class="btn-add-art text-sm text-zinc-600 hover:text-zinc-900 font-bold print:hidden flex items-center gap-1 mt-2 bg-zinc-100 hover:bg-zinc-200 px-3 py-1.5 rounded transition-colors" data-cat="${catIndex}">+ Añadir Elemento</button>`;
         } else if (cat.modo === 'compuesto') {
             bodyHtml = cat.subitems.map((sub, subIndex) => {
                 const filasHtml = sub.elementos.map((art, i) => renderFila(art, i, subIndex)).join('');
                 return `
-                    <div class="mb-8 pl-4 border-l-[3px] border-zinc-200" data-cat-index="${catIndex}" data-subitem-index="${subIndex}">
+                    <div class="mb-8 pl-4 border-l-[3px] border-zinc-200 print:border-l-0 print:pl-0" data-cat-index="${catIndex}" data-subitem-index="${subIndex}">
                         <div class="flex justify-between items-center mb-4">
-                            <input type="text" class="input-subitem-titulo font-bold text-[15px] text-zinc-600 bg-transparent border-0 p-0 focus:ring-0 ${isEditMode ? 'border border-zinc-300 bg-zinc-50 cursor-text rounded-md px-2 py-1 -ml-2' : 'pointer-events-none cursor-default'}" data-cat="${catIndex}" data-subitem="${subIndex}" value="${sub.titulo || ''}" placeholder="Ej. Tuberías">
+                            <input type="text" class="input-subitem-titulo font-bold text-[15px] text-zinc-600 print:text-zinc-900 print:uppercase print:text-sm bg-transparent border-0 p-0 focus:ring-0 ${isEditMode ? 'border border-zinc-300 bg-zinc-50 cursor-text rounded-md px-2 py-1 -ml-2' : 'pointer-events-none cursor-default'}" data-cat="${catIndex}" data-subitem="${subIndex}" value="${sub.titulo || ''}" placeholder="Ej. Tuberías">
                             <div class="flex gap-1 print:hidden ${isEditMode ? '' : 'hidden'}">
                                 <button class="btn-del-subitem text-red-400 hover:text-red-600 p-1" data-cat="${catIndex}" data-subitem="${subIndex}" title="Eliminar Subítem"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg></button>
                             </div>
                         </div>
-                        <div class="mb-3">${renderTabla(filasHtml, sub.subtotal)}</div>
+                        <div class="mb-3">${renderTabla(filasHtml, sub.subtotal, sub.titulo)}</div>
                         <button class="btn-add-art text-xs text-zinc-500 hover:text-zinc-900 font-bold print:hidden flex items-center gap-1 mt-1 bg-zinc-100 hover:bg-zinc-200 px-2 py-1 rounded transition-colors" data-cat="${catIndex}" data-subitem="${subIndex}">+ Añadir Elemento</button>
                     </div>
                 `;
             }).join('');
             
-            // Total visual de la Categoría que envuelve los Subgrupos
+            // Total general de la Categoría sin el div gris al imprimir
             bodyHtml += `
-                <div class="flex justify-end mt-4 mb-4 pr-1">
-                    <div class="text-right py-2 px-4 bg-zinc-100/50 rounded-md font-bold text-zinc-800 border border-zinc-200 shadow-sm">
-                        Total <span class="uppercase">${cat.titulo}</span>: <span class="cat-subtotal text-lg ml-2">$${formatCLP(cat.subtotal)}</span>
+                <div class="flex justify-end mt-4 mb-4 pr-1 print:mt-2">
+                    <div class="text-right py-2 px-4 bg-zinc-100/50 rounded-md font-bold text-zinc-800 border border-zinc-200 shadow-sm print:bg-transparent print:border-0 print:shadow-none print:px-0">
+                        Total <span class="uppercase">${cat.titulo}</span>: <span class="cat-subtotal text-lg ml-2 print:text-base">$${formatCLP(cat.subtotal)}</span>
                     </div>
                 </div>
             `;
