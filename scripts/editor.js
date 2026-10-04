@@ -526,49 +526,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
 
     // Evento Terminar (Imprimir / PDF)
-    btnImprimir.addEventListener('click', async () => {
-        const isDirty = hayCambiosSinConfirmar();
-        const versionesReales = (pData.historialVersiones || []).filter(v => v.etiqueta !== "Autoguardado en Nube");
-        
-        if (versionesReales.length > 0) {
-            if (isDirty) {
-                // Hay un borrador no guardado (fantasma). Al imprimir, lo convertimos en un nodo real.
-                const snapshotLimpio = JSON.parse(JSON.stringify(pData));
-                delete snapshotLimpio.historialVersiones;
-                
-                // Eliminamos cualquier autoguardado de nube previo para no ensuciar el array
-                pData.historialVersiones = versionesReales;
-                
-                pData.historialVersiones.push({
-                    versionId: `v_pdf_${Date.now()}`,
-                    fechaHora: new Date().toISOString(),
-                    etiqueta: "Autoguardado (Impresión)",
-                    isPdfExport: true,
-                    snapshot: snapshotLimpio
-                });
-            } else {
-                // No hay cambios. Simplemente le ponemos el badge de "Exportado" a la última versión manual.
-                // Como filtramos los de la nube, sabemos que el último índice de pData.historialVersiones es el manual.
-                pData.historialVersiones[pData.historialVersiones.length - 1].isPdfExport = true;
-            }
-        } else {
-            // Es la primera vez que se exporta y no hay historial.
-            const snapshotLimpio = JSON.parse(JSON.stringify(pData));
-            delete snapshotLimpio.historialVersiones;
-            
-            pData.historialVersiones = [{
-                versionId: `v_pdf_${Date.now()}`,
-                fechaHora: new Date().toISOString(),
-                etiqueta: "Primera exportación",
-                isPdfExport: true,
-                snapshot: snapshotLimpio
-            }];
-        }
-        
-        await guardarYRenderizar();
-        
-        exportarPDF(pData.codigoProyecto, () => {
-            window.print();
+    btnImprimir.addEventListener('click', () => {
+        // Se importa dinámicamente desde exportar.js para no saturar core.js
+        import('./exportar.js').then(module => {
+            module.manejarExportacionPDF(pData, hayCambiosSinConfirmar, guardarYRenderizar);
         });
     });
 
