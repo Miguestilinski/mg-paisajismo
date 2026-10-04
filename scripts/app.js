@@ -117,11 +117,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     };
 
-    // Inicializar sincronización en la página principal tras cargar los modales (Pide clave si no hay sesión)
-    const isOnline = await initSync({ askForPassword: true });
+    // Bloquear ejecución y detener todo si no hay sesión activa (forzamos login de inmediato)
+    const isAuthenticated = await initSync(true);
+    if (!isAuthenticated) return;
 
-    if (isOnline) {
-        // Descargar todos los presupuestos de la nube para mantener sincronizados los dispositivos
+    // Si tenemos sesión, intentamos descargar de la nube para estar sincronizados
+    if (navigator.onLine) {
         const presupuestosNube = await descargarTodosDesdeNube();
         if (presupuestosNube) {
             for (const id in presupuestosNube) {
@@ -451,7 +452,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
                 if (confirmado) {
                     await localDB.presupuestos.delete(id);
-                    if (isOnline) {
+                    if (navigator.onLine) {
                         await borrarDeNube(id);
                     }
                     cargarPresupuestos(); // Recargar tabla
@@ -460,6 +461,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     }
 
-    // Inicializar la tabla al cargar la página
+    // Inicializar la tabla solo si hemos pasado la barrera de seguridad de autenticación
     cargarPresupuestos();
 });

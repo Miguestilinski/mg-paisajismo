@@ -8,28 +8,28 @@ const auth = getAuth(app);
 // Diccionario de usuarios permitidos
 const USERS = {
     "moni": { email: "mg_paisajismo@hotmail.com", nombre: "Mónica" },
-    "roberto": { email: "robertomunozg@hotmail.com", nombre: "Roberto" }
+    "roberto": { email: "robertomunozg@hotmail.cl", nombre: "Roberto" }
 };
 
 let debounceTimer;
 
-// Inicializa la sesión. Si options.askForPassword es true, pide clave. Si es false, verifica silenciosamente.
-export function initSync(options = { askForPassword: false }) {
+// Inicializa la sesión de forma estricta. Si forceLogin es true (en index) o si no hay sesión iniciada (en editor), bloquea el paso.
+export function initSync(forceLogin = false) {
     return new Promise((resolve) => {
         onAuthStateChanged(auth, async (user) => {
             if (user) {
-                // Inferir el nombre del usuario basado en el email logueado y guardarlo localmente
                 const matchedUser = Object.values(USERS).find(u => u.email === user.email);
                 if (matchedUser) {
                     localStorage.setItem('appUserName', matchedUser.nombre);
                 }
-                resolve(true); // Ya hay una cookie/sesión válida
+                resolve(true); // Hay una sesión válida (online o cacheada offline en IndexedDB)
             } else {
-                if (options.askForPassword) {
+                if (forceLogin) {
                     const loggedIn = await pedirClaveYLogear();
                     resolve(loggedIn);
                 } else {
-                    resolve(false); // Estamos offline pero en silencio
+                    window.location.href = 'index.html'; // Expulsar al usuario al index para que inicie sesión
+                    resolve(false); 
                 }
             }
         });
@@ -40,18 +40,34 @@ function pedirClaveYLogear() {
     return new Promise((resolve) => {
         const modal = document.getElementById('modal-login');
         const box = document.getElementById('modal-login-box');
-        const selectUsuario = document.getElementById('login-usuario');
+        const inputUsuario = document.getElementById('login-usuario');
+        const loginMoni = document.getElementById('login-moni');
+        const loginRoberto = document.getElementById('login-roberto');
         const inputClave = document.getElementById('login-password');
         const btnLogin = document.getElementById('btn-login');
-        const btnOffline = document.getElementById('btn-offline');
         const lblError = document.getElementById('login-error-msg');
         const btnTogglePwd = document.getElementById('btn-toggle-password');
         const iconEye = document.getElementById('icon-eye');
         const iconEyeOff = document.getElementById('icon-eye-off');
 
-        if (!modal || !selectUsuario) {
+        if (!modal || !inputUsuario) {
             resolve(false); 
             return;
+        }
+
+        // Lógica visual de los botones de selección de usuario (Radio cards)
+        if (loginMoni && loginRoberto) {
+            const setActive = (activeBtn, inactiveBtn, val) => {
+                inputUsuario.value = val;
+                activeBtn.classList.replace('border-zinc-200', 'border-blue-500');
+                activeBtn.classList.replace('bg-zinc-50', 'bg-blue-50');
+                activeBtn.classList.replace('text-zinc-600', 'text-blue-700');
+                inactiveBtn.classList.replace('border-blue-500', 'border-zinc-200');
+                inactiveBtn.classList.replace('bg-blue-50', 'bg-zinc-50');
+                inactiveBtn.classList.replace('text-blue-700', 'text-zinc-600');
+            };
+            loginMoni.addEventListener('click', () => setActive(loginMoni, loginRoberto, 'moni'));
+            loginRoberto.addEventListener('click', () => setActive(loginRoberto, loginMoni, 'roberto'));
         }
 
         const mostrarAlerta = (titulo, mensaje, colorBase, colorHover) => {
@@ -64,7 +80,6 @@ function pedirClaveYLogear() {
             modal.classList.remove('opacity-100'); modal.classList.add('opacity-0');
             setTimeout(() => modal.classList.add('hidden'), 200);
             btnLogin.removeEventListener('click', onLogin);
-            btnOffline.removeEventListener('click', onOffline);
             inputClave.removeEventListener('keydown', onKey);
             if(btnTogglePwd) btnTogglePwd.removeEventListener('click', onTogglePwd);
             
@@ -87,7 +102,7 @@ function pedirClaveYLogear() {
         };
 
         const onLogin = async () => {
-            const usuarioKey = selectUsuario.value;
+            const usuarioKey = inputUsuario.value;
             const clave = inputClave.value.trim();
             
             if (!clave) {
@@ -103,7 +118,7 @@ function pedirClaveYLogear() {
                 await signInWithEmailAndPassword(auth, USERS[usuarioKey].email, clave);
                 localStorage.setItem('appUserName', USERS[usuarioKey].nombre);
                 cleanup();
-                mostrarAlerta("Conectado", "Sincronización activada correctamente.", "bg-emerald-500", "hover:bg-emerald-600");
+                mostrarAlerta("Conectado", "Sesión iniciada correctamente.", "bg-emerald-500", "hover:bg-emerald-600");
                 resolve(true);
             } catch (error) {
                 console.error("Firebase Auth Error:", error.code);
@@ -114,16 +129,9 @@ function pedirClaveYLogear() {
             }
         };
 
-        const onOffline = () => {
-            cleanup();
-            mostrarAlerta("Modo Local", "Trabajarás de forma local. Recuerda que si el equipo falla, los datos no estarán en la nube.", "bg-amber-500", "hover:bg-amber-600");
-            resolve(false);
-        };
-
         const onKey = (e) => { if (e.key === 'Enter') onLogin(); };
 
         btnLogin.addEventListener('click', onLogin);
-        btnOffline.addEventListener('click', onOffline);
         inputClave.addEventListener('keydown', onKey);
         if(btnTogglePwd) btnTogglePwd.addEventListener('click', onTogglePwd);
 

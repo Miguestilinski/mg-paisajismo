@@ -21,14 +21,15 @@ document.addEventListener('DOMContentLoaded', async () => {
     // 2. Inicializar Modales Custom
     setupModals();
 
+    // Expulsar inmediatamente si no hay sesión persistente iniciada (redirecciona en initSync)
+    const isAuthenticated = await initSync(false);
+    if (!isAuthenticated) return;
+
     // 3. Variables Globales, Estado y Conexión Nube
     let pDataLocal = await localDB.presupuestos.get(id) || null;
-
-    // Conexión silenciosa: Verifica si ya hay sesión pero NO pide clave
-    const isOnline = await initSync({ askForPassword: false });
-    
     let pDataNube = null;
-    if (isOnline) {
+    
+    if (navigator.onLine) {
         pDataNube = await descargarDesdeNube(id);
     }
 
