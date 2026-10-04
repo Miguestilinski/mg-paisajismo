@@ -42,7 +42,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     if (!pData.items) pData.items = [];
     if (!pData.cliente) pData.cliente = {};
-    if (!pData.historialVersiones) pData.historialVersiones = [];
+    
+    // Limpiamos historialVersiones de elementos nulos o defectuosos que provengan de la nube
+    pData.historialVersiones = (pData.historialVersiones || []).filter(v => v != null);
 
     // MIGRACIÓN ESTRUCTURAL INVISIBLE (Convierte datos viejos a la nueva nomenclatura)
     pData.items.forEach(cat => {

@@ -138,12 +138,13 @@ export function syncToCloud(pData, indicadorCallback) {
             const dataLimpia = JSON.parse(JSON.stringify(pData));
             dataLimpia.ultimaSincronizacion = new Date().toISOString();
             
-            // Función auxiliar para comparar el estado actual con la última versión guardada (ignorando autoguardados previos)
+            // Filtramos cualquier elemento nulo (huecos) y todos los autoguardados previos para que Firebase reciba un array limpio
+            dataLimpia.historialVersiones = (dataLimpia.historialVersiones || []).filter(v => v != null && v.etiqueta !== "Autoguardado en Nube");
+
+            // Función auxiliar para comparar el estado actual con la última versión manual guardada
             const hayCambiosSinConfirmar = () => {
-                const versionesReales = (dataLimpia.historialVersiones || []).filter(v => v.etiqueta !== "Autoguardado en Nube");
-                if (versionesReales.length === 0) return true;
-                
-                const ultimaVersion = versionesReales[versionesReales.length - 1];
+                if (dataLimpia.historialVersiones.length === 0) return true;
+                const ultimaVersion = dataLimpia.historialVersiones[dataLimpia.historialVersiones.length - 1];
                 
                 const limpiarDataParaComparar = (data) => {
                     if (!data) return {};
@@ -159,10 +160,7 @@ export function syncToCloud(pData, indicadorCallback) {
                 return limpiarDataParaComparar(dataLimpia) !== limpiarDataParaComparar(ultimaVersion.snapshot);
             };
 
-            // 1. Limpiamos cualquier autoguardado previo de la matriz para evitar duplicados
-            dataLimpia.historialVersiones = (dataLimpia.historialVersiones || []).filter(v => v.etiqueta !== "Autoguardado en Nube");
-
-            // 2. Si hay un borrador activo real, lo agregamos como un único nodo temporal al final
+            // Si hay un borrador activo real, lo agregamos como un único nodo temporal al final
             if (hayCambiosSinConfirmar()) {
                 const snapshotActual = JSON.parse(JSON.stringify(dataLimpia));
                 delete snapshotActual.historialVersiones; 
