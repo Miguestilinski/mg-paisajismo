@@ -134,12 +134,27 @@ export function syncToCloud(pData, indicadorCallback) {
 
     debounceTimer = setTimeout(async () => {
         try {
+            // Función auxiliar recursiva para eliminar 'historialVersiones' de cualquier parte del objeto
+            const purgarHistorialRecursivo = (obj) => {
+                if (Array.isArray(obj)) {
+                    obj.forEach(item => purgarHistorialRecursivo(item));
+                } else if (obj !== null && typeof obj === 'object') {
+                    if ('historialVersiones' in obj) {
+                        delete obj.historialVersiones;
+                    }
+                    Object.keys(obj).forEach(key => purgarHistorialRecursivo(obj[key]));
+                }
+            };
+
             // Clon profundo para limpiar proxys o elementos de interfaz que no van a la BD
             const dataLimpia = JSON.parse(JSON.stringify(pData));
             dataLimpia.ultimaSincronizacion = new Date().toISOString();
             
             // Filtramos cualquier elemento nulo (huecos) y todos los autoguardados previos para que Firebase reciba un array limpio
             dataLimpia.historialVersiones = (dataLimpia.historialVersiones || []).filter(v => v != null && v.etiqueta !== "Autoguardado en Nube");
+
+            // Curamos el historial entero eliminando anidaciones infinitas
+            purgarHistorialRecursivo(dataLimpia.historialVersiones);
 
             // Función auxiliar para comparar el estado actual con la última versión manual guardada
             const hayCambiosSinConfirmar = () => {
@@ -163,7 +178,8 @@ export function syncToCloud(pData, indicadorCallback) {
             // Si hay un borrador activo real, lo agregamos como un único nodo temporal al final
             if (hayCambiosSinConfirmar()) {
                 const snapshotActual = JSON.parse(JSON.stringify(dataLimpia));
-                delete snapshotActual.historialVersiones; 
+                // Eliminamos cualquier historial anidado del nuevo snapshot antes de subirlo
+                purgarHistorialRecursivo(snapshotActual); 
                 
                 dataLimpia.historialVersiones.push({
                     versionId: `v_auto_${Date.now()}`,
