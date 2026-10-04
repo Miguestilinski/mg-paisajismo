@@ -109,9 +109,9 @@ export function renderItemsHTML(pData, isEditMode) {
             bodyHtml = cat.subitems.map((sub, subIndex) => {
                 const filasHtml = sub.elementos.map((art, i) => renderFila(art, i, subIndex)).join('');
                 return `
-                    <div class="mb-8 pl-4 border-l-[3px] border-zinc-200 print:border-l-0 print:pl-0" data-subitem-index="${subIndex}">
+                    <div class="mb-8 pl-4 border-l-[3px] border-zinc-200 print:pl-4 print:border-l-[3px] print:border-zinc-200" data-subitem-index="${subIndex}">
                         <div class="flex justify-between items-center mb-4">
-                            <input type="text" class="input-subitem-titulo font-bold text-[15px] text-zinc-600 print:text-zinc-900 print:uppercase print:text-sm bg-transparent border-0 p-0 focus:ring-0 ${isEditMode ? 'border border-zinc-300 bg-zinc-50 cursor-text rounded-md px-2 py-1 -ml-2' : 'pointer-events-none cursor-default'}" data-cat="${catIndex}" data-subitem="${subIndex}" value="${sub.titulo || ''}" placeholder="Ej. Tuberías">
+                            <input type="text" class="input-subitem-titulo font-bold text-[15px] text-zinc-600 print:text-zinc-800 print:font-bold print:uppercase print:text-[15px] bg-transparent border-0 p-0 focus:ring-0 ${isEditMode ? 'border border-zinc-300 bg-zinc-50 cursor-text rounded-md px-2 py-1 -ml-2' : 'pointer-events-none cursor-default'}" data-cat="${catIndex}" data-subitem="${subIndex}" value="${sub.titulo || ''}" placeholder="Ej. Tuberías">
                             <div class="flex gap-1 print:hidden ${isEditMode ? '' : 'hidden'}">
                                 <button class="btn-del-subitem text-red-400 hover:text-red-600 p-1" data-cat="${catIndex}" data-subitem="${subIndex}" title="Eliminar Subítem"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg></button>
                             </div>
@@ -122,9 +122,9 @@ export function renderItemsHTML(pData, isEditMode) {
                 `;
             }).join('');
             
-            // Total general de la Categoría (Mismo esqueleto de tabla para alinear las columnas)
+            // Total general de la Categoría (Mismo esqueleto de tabla para alinear las columnas, manteniendo el margen del subítem visualmente)
             bodyHtml += `
-                <div class="overflow-x-auto -mx-5 px-5 sm:mx-0 sm:px-0 pb-2 print:overflow-visible print:mx-0 print:px-0 mt-2">
+                <div class="overflow-x-auto -mx-5 px-5 sm:mx-0 sm:px-0 pb-2 print:overflow-visible print:mx-0 print:px-0 mt-4 pl-4 print:pl-4">
                     <table class="w-full text-left table-fixed min-w-[650px] print:min-w-0 print:w-full">
                         <!-- Clones invisibles para forzar el ancho de columnas idéntico a las tablas de arriba -->
                         <thead class="h-0 opacity-0 pointer-events-none border-none">
@@ -141,7 +141,8 @@ export function renderItemsHTML(pData, isEditMode) {
                         <tbody></tbody>
                         <tfoot>
                             <tr class="border-t-2 border-zinc-900">
-                                <td colspan="5" class="text-right py-3 pr-4 font-extrabold text-zinc-800 text-[15px]">Total <span class="uppercase">${cat.titulo}</span>:</td>                                 <td class="py-3 text-right font-extrabold text-zinc-900 text-lg cat-subtotal">$${formatCLP(cat.subtotal)}</td>
+                                <td colspan="5" class="text-right py-3 pr-4 font-extrabold text-zinc-800 text-[15px]">Total <span class="uppercase">${cat.titulo}</span>:</td>
+                                <td class="py-3 text-right font-extrabold text-zinc-900 text-lg cat-subtotal">$${formatCLP(cat.subtotal)}</td>
                                 <td class="w-28 pl-4 print:hidden ${isEditMode ? '' : 'hidden'}"></td>
                             </tr>
                         </tfoot>
