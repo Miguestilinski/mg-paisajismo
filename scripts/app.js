@@ -1,6 +1,6 @@
 import { db as nubeDB } from './firebase-config.js';
 import { localDB } from './db.js';
-import { initSync } from './sync.js';
+import { initSync, descargarTodosDesdeNube, borrarDeNube } from './sync.js';
 
 document.addEventListener('DOMContentLoaded', async () => {
     
@@ -118,7 +118,26 @@ document.addEventListener('DOMContentLoaded', async () => {
     };
 
     // Inicializar sincronización en la página principal tras cargar los modales (Pide clave si no hay sesión)
-    await initSync({ askForPassword: true });
+    const isOnline = await initSync({ askForPassword: true });
+
+    if (isOnline) {
+        // Descargar todos los presupuestos de la nube para mantener sincronizados los dispositivos
+        const presupuestosNube = await descargarTodosDesdeNube();
+        if (presupuestosNube) {
+            for (const id in presupuestosNube) {
+                const pNube = presupuestosNube[id];
+                const pLocal = await localDB.presupuestos.get(id);
+                
+                // Gana la nube si el proyecto no existe localmente o si su última sincronización es más reciente
+                const timeNube = new Date(pNube.ultimaSincronizacion || pNube.fechaModificacion || 0).getTime();
+                const timeLocal = pLocal ? new Date(pLocal.ultimaSincronizacion || pLocal.fechaModificacion || 0).getTime() : 0;
+                
+                if (!pLocal || timeNube > timeLocal) {
+                    await localDB.presupuestos.put(pNube);
+                }
+            }
+        }
+    }
 
     const btnNuevo = document.getElementById('btn-nuevo-presupuesto');
     const btnToggleEdicionGlobal = document.getElementById('btn-toggle-edicion-global');
@@ -417,6 +436,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 
                 if (confirmado) {
                     await localDB.presupuestos.delete(id);
+                    if (isOnline) {
+                        await borrarDeNube(id);
+                    }
                     cargarPresupuestos(); // Recargar tabla
                 }
             });

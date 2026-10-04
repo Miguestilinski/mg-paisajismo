@@ -215,3 +215,28 @@ export async function descargarDesdeNube(id) {
     }
     return null;
 }
+
+// Rescata TODOS los documentos (Para mantener sincronizada la página de inicio en todos los dispositivos)
+export async function descargarTodosDesdeNube() {
+    if (!auth.currentUser) return null;
+    try {
+        const dbRef = ref(db);
+        const snapshot = await get(child(dbRef, `presupuestos`));
+        if (snapshot.exists()) {
+            return snapshot.val();
+        }
+    } catch (e) {
+        console.error("Error descargando todos los presupuestos de Firebase RTDB:", e);
+    }
+    return null;
+}
+
+// Elimina un proyecto completamente de la nube
+export async function borrarDeNube(id) {
+    if (!auth.currentUser) return;
+    try {
+        await set(ref(db, `presupuestos/${id}`), null);
+    } catch (error) {
+        console.error("Error borrando de Firebase:", error);
+    }
+}
