@@ -258,19 +258,76 @@ document.addEventListener('DOMContentLoaded', async () => {
             return;
         }
 
-        const formatCLP = (num) => new Intl.NumberFormat('es-CL').format(Math.round(num));
+        onst formatCLP = (num) => new Intl.NumberFormat('es-CL').format(Math.round(num));
         const formatFecha = (isoString) => {
             const date = new Date(isoString);
             const meses = ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"];
-            return `${date.getDate()} ${meses[date.getMonth()]} ${date.getFullYear()}`;
+            return `${date.getDate()} ${meses[date.getMonth()]}${date.getFullYear()}`;
+        };
+
+        const stringifyParaComparar = (data) => {
+            if (!data) return "{}";
+            const clean = {
+                cliente: data.cliente || {},
+                codigoProyecto: data.codigoProyecto || "",
+                encabezadoTexto: data.encabezadoTexto || "",
+                items: JSON.parse(JSON.stringify(data.items || [])),
+                totales: data.totales || {}
+            };
+            clean.items.forEach(cat => {
+                if (!cat.modo) cat.modo = (cat.subitems && cat.subitems.length > 0) ? 'compuesto' : 'simple';
+                if (!cat.subitems) cat.subitems = [];
+                if (!cat.elementos) cat.elementos = [];
+            });
+            return JSON.stringify(clean);
         };
 
         presupuestosFiltrados.forEach(p => {
             const tr = document.createElement('tr');
             tr.className = `hover:bg-zinc-50/80 transition-colors group border-b border-zinc-100 ${!isGlobalEditMode ? 'cursor-pointer' : ''}`;
 
-            const badgeLocal = `<span class="bg-zinc-200 text-zinc-700 text-[10px] font-bold px-2 py-0.5 rounded-full inline-flex items-center gap-1 shadow-sm"><svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z"></path></svg> Local</span>`;
-            const badgeNube = p.cloudId ? `<span class="bg-blue-100 text-blue-700 text-[10px] font-bold px-2 py-0.5 rounded-full inline-flex items-center gap-1 shadow-sm"><svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path></svg> Nube</span>` : '';
+            // Determinar el Estado de Sincronización
+            let estadoUI = '';
+            const isVacio = (!p.cliente?.destinatario && !p.cliente?.constructora && p.items.length === 0);
+            
+            if (isVacio) {
+                estadoUI = `<span class="bg-zinc-100 text-zinc-500 text-[10px] font-bold px-2 py-0.5 rounded-full inline-flex items-center gap-1 shadow-sm border border-zinc-200"><span class="w-1.5 h-1.5 rounded-full bg-zinc-400"></span> Vacío</span>`;
+            } else {
+                const arrVersiones = (p.historialVersiones || []).filter(v => v != null);
+                const versionesReales = arrVersiones.filter(v => v.etiqueta !== "Autoguardado en Nube");
+                
+                // Tiene versiones guardadas manualmente
+                if (versionesReales.length > 0) {
+                    const ultimaVersionManual = versionesReales[versionesReales.length - 1];
+                    const diffManual = stringifyParaComparar(p) !== stringifyParaComparar(ultimaVersionManual.snapshot);
+                    
+                    if (diffManual) {
+                        // Hay cambios sin guardar manualmente (Fantasma). Verificamos si al menos el fantasma subió a la nube.
+                        const lastSyncTime = p.ultimaSincronizacion ? new Date(p.ultimaSincronizacion).getTime() : 0;
+                        const lastModTime = p.fechaModificacion ? new Date(p.fechaModificacion).getTime() : 0;
+                        
+                        // Si la última sincronización es muy reciente respecto a la modificación (margen de 5 segs por el debounce), asumimos que el fantasma está en la nube.
+                        if (lastSyncTime > 0 && (lastModTime - lastSyncTime < 5000)) {
+                             estadoUI = `<span class="bg-zinc-100 text-zinc-600 text-[10px] font-bold px-2 py-0.5 rounded-full inline-flex items-center gap-1 shadow-sm border border-zinc-200"><span class="w-1.5 h-1.5 rounded-full bg-zinc-500"></span> Borrador en Nube</span>`;
+                        } else {
+                             estadoUI = `<span class="bg-zinc-100 text-zinc-500 text-[10px] font-bold px-2 py-0.5 rounded-full inline-flex items-center gap-1 shadow-sm border border-zinc-200"><span class="w-1.5 h-1.5 rounded-full bg-zinc-400"></span> Borrador Local</span>`;
+                        }
+                    } else {
+                        // El borrador local es idéntico al último guardado manual. Verificamos si ese guardado llegó a la nube.
+                        const lastSyncTime = p.ultimaSincronizacion ? new Date(p.ultimaSincronizacion).getTime() : 0;
+                        const versionManualTime = new Date(ultimaVersionManual.fechaHora).getTime();
+                        
+                        if (lastSyncTime >= versionManualTime) {
+                            estadoUI = `<span class="bg-blue-50 text-blue-700 text-[10px] font-bold px-2 py-0.5 rounded-full inline-flex items-center gap-1 shadow-sm border border-blue-200"><svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path></svg> Sincronizado</span>`;
+                        } else {
+                            estadoUI = `<span class="bg-emerald-50 text-emerald-700 text-[10px] font-bold px-2 py-0.5 rounded-full inline-flex items-center gap-1 shadow-sm border border-emerald-200"><span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Guardado Local</span>`;
+                        }
+                    }
+                } else {
+                    // No hay versiones manuales aún, pero tiene datos.
+                    estadoUI = `<span class="bg-zinc-100 text-zinc-500 text-[10px] font-bold px-2 py-0.5 rounded-full inline-flex items-center gap-1 shadow-sm border border-zinc-200"><span class="w-1.5 h-1.5 rounded-full bg-zinc-400"></span> Borrador Local</span>`;
+                }
+            }
 
             const nombreProyecto = p.codigoProyecto && p.codigoProyecto !== "Nuevo Proyecto" ? p.codigoProyecto : "Proyecto sin nombre";
             const nombreConstructora = p.cliente?.constructora || 'Sin constructora especificada';
@@ -282,8 +339,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     <div class="flex items-center gap-3 mb-0.5">
                         <span class="font-bold text-zinc-900 text-base truncate max-w-[280px]" title="${nombreProyecto}">${nombreProyecto}</span>
                         <div class="flex items-center gap-1.5">
-                            ${badgeLocal}
-                            ${badgeNube}
+                            ${estadoUI}
                         </div>
                     </div>
                     <div class="text-sm text-zinc-500 font-normal truncate max-w-sm">${nombreConstructora}</div>
