@@ -8,7 +8,7 @@ const auth = getAuth(app);
 // Diccionario de usuarios permitidos
 const USERS = {
     "moni": { email: "mg_paisajismo@hotmail.com", nombre: "Mónica" },
-    "roberto": { email: "robertomunozg@hotmail.cl", nombre: "Roberto" }
+    "roberto": { email: "robertomunozg@hotmail.com", nombre: "Roberto" }
 };
 
 let debounceTimer;
