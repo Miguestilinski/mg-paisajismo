@@ -126,8 +126,8 @@ export function renderItemsHTML(pData, isEditMode) {
             bodyHtml += `
                 <div class="flex justify-end pr-1 mt-2">
                     <div class="w-full sm:w-[40%] print:w-full border-t border-zinc-900 pt-3 flex justify-between">
-                        <span class="font-bold text-zinc-600 text-sm">Total <span class="uppercase">${cat.titulo}</span>:</span>
-                        <span class="cat-subtotal font-bold text-zinc-900 text-base">$${formatCLP(cat.subtotal)}</span>
+                        <span class="font-bold text-zinc-600">Total <span class="uppercase">${cat.titulo}</span>:</span>
+                        <span class="cat-subtotal font-bold text-zinc-900">$${formatCLP(cat.subtotal)}</span>
                     </div>
                 </div>
             `;
