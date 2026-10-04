@@ -1,6 +1,6 @@
 import { db as nubeDB } from './firebase-config.js';
 import { localDB } from './db.js';
-import { initSync, descargarTodosDesdeNube, borrarDeNube } from './sync.js';
+import { initSync, descargarTodosDesdeNube, borrarDeNube, syncToCloud } from './sync.js';
 
 document.addEventListener('DOMContentLoaded', async () => {
     
@@ -355,13 +355,17 @@ document.addEventListener('DOMContentLoaded', async () => {
             tr.innerHTML = `
                 <td class="p-5 text-zinc-500 text-sm whitespace-nowrap align-middle">${formatFecha(p.fechaModificacion)}</td>
                 <td class="p-5 align-middle">
-                    <div class="flex items-center gap-3 mb-0.5">
-                        <span class="font-bold text-zinc-900 text-base truncate max-w-[280px]" title="${nombreProyecto}">${nombreProyecto}</span>
-                        <div class="flex items-center gap-1.5">
-                            ${estadoUI}
+                    ${!isGlobalEditMode ? `
+                        <div class="flex items-center gap-3 mb-0.5">
+                            <span class="font-bold text-zinc-900 text-base truncate max-w-[280px]" title="${nombreProyecto}">${nombreProyecto}</span>
+                            <div class="flex items-center gap-1.5">
+                                ${estadoUI}
+                            </div>
                         </div>
-                    </div>
-                    <div class="text-sm text-zinc-500 font-normal truncate max-w-sm">${nombreConstructora}</div>
+                        <div class="text-sm text-zinc-500 font-normal truncate max-w-sm">${nombreConstructora}</div>
+                    ` : `
+                        <input type="text" class="input-edicion-nombre block w-full px-3 py-1.5 border border-zinc-300 rounded-md bg-zinc-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-base font-bold text-zinc-900 transition-colors shadow-inner" value="${nombreProyecto}" data-id="${p.id}" placeholder="Nombre del proyecto...">
+                    `}
                 </td>
                 <td class="p-5 font-extrabold text-zinc-800 whitespace-nowrap align-middle">$${formatCLP(totalNeto)}</td>
                 <td class="p-5 text-right whitespace-nowrap align-middle w-48">
@@ -372,9 +376,9 @@ document.addEventListener('DOMContentLoaded', async () => {
                         </div>
                     ` : `
                         <div class="flex items-center justify-end gap-3">
-                            <button class="btn-editar-nombre text-zinc-500 hover:text-blue-600 hover:bg-blue-50 transition-colors p-1.5 rounded-md flex items-center gap-1.5 text-sm font-medium" data-id="${p.id}" data-nombre="${nombreProyecto}">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
-                                Editar
+                            <button class="btn-guardar-nombre text-zinc-500 hover:text-emerald-600 hover:bg-emerald-50 transition-colors p-1.5 rounded-md flex items-center gap-1.5 text-sm font-medium" data-id="${p.id}">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                                Guardar
                             </button>
                             <button class="btn-eliminar-proyecto text-zinc-400 hover:text-red-500 hover:bg-red-50 transition-colors p-1.5 rounded-md" data-id="${p.id}" data-nombre="${nombreProyecto}" title="Eliminar proyecto">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
@@ -393,31 +397,37 @@ document.addEventListener('DOMContentLoaded', async () => {
             lista.appendChild(tr);
         });
 
-        // Lógica para GUARDAR NOMBRE usando el Modal Custom
-        document.querySelectorAll('.btn-editar-nombre').forEach(btn => {
-            btn.addEventListener('click', async (e) => {
-                e.stopPropagation(); // Evita que se abra el proyecto
-                const id = btn.dataset.id;
-                const nombreActual = btn.dataset.nombre;
-                
-                const nuevoNombre = await window.customPrompt(
-                    "Renombrar Proyecto", 
-                    "Modifica el nombre con el que identificarás este presupuesto:", 
-                    "Ej: Edificio Rivas Vicuña",
-                    nombreActual === "Proyecto sin nombre" ? "" : nombreActual
-                );
-
-                if (nuevoNombre !== null && nuevoNombre.trim() !== "") {
-                    const presupuesto = await localDB.presupuestos.get(id);
-                    if (presupuesto) {
-                        presupuesto.codigoProyecto = nuevoNombre.trim();
-                        presupuesto.fechaModificacion = new Date().toISOString();
-                        await localDB.presupuestos.put(presupuesto);
-                        cargarPresupuestos(); // Recargar tabla
+        // Lógica para GUARDAR NOMBRE DIRECTAMENTE (Edición Inline)
+        if (isGlobalEditMode) {
+            document.querySelectorAll('.btn-guardar-nombre').forEach(btn => {
+                btn.addEventListener('click', async (e) => {
+                    e.stopPropagation();
+                    const id = btn.dataset.id;
+                    const inputElement = document.querySelector(`.input-edicion-nombre[data-id="${id}"]`);
+                    
+                    if (inputElement) {
+                        const nuevoNombre = inputElement.value.trim();
+                        if (nuevoNombre !== "") {
+                            const presupuesto = await localDB.presupuestos.get(id);
+                            if (presupuesto && presupuesto.codigoProyecto !== nuevoNombre) {
+                                presupuesto.codigoProyecto = nuevoNombre;
+                                presupuesto.fechaModificacion = new Date().toISOString();
+                                await localDB.presupuestos.put(presupuesto);
+                                
+                                // Sincronizar silenciosamente a la nube si estamos online
+                                if (isOnline) {
+                                    btn.innerHTML = `<svg class="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Nube...`;
+                                    syncToCloud(presupuesto); 
+                                    setTimeout(cargarPresupuestos, 600); // Recargar tras animación
+                                } else {
+                                    cargarPresupuestos();
+                                }
+                            }
+                        }
                     }
-                }
+                });
             });
-        });
+        }
 
         // Lógica para ELIMINAR PROYECTO usando el Modal Custom
         document.querySelectorAll('.btn-eliminar-proyecto').forEach(btn => {
