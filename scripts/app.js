@@ -258,7 +258,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             return;
         }
 
-        onst formatCLP = (num) => new Intl.NumberFormat('es-CL').format(Math.round(num));
+        const formatCLP = (num) => new Intl.NumberFormat('es-CL').format(Math.round(num));
         const formatFecha = (isoString) => {
             const date = new Date(isoString);
             const meses = ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"];
