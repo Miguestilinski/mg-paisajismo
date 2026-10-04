@@ -163,17 +163,17 @@
             <div id="hoja-presupuesto" class="bg-white w-full max-w-4xl mx-auto shadow-2xl p-5 sm:p-8 md:p-12 min-h-[1056px] print:min-h-0 print:shadow-none print:p-0 print:max-w-full">
                 
                 <!-- Encabezado MG Paisajismo -->
-                <header class="flex flex-col md:flex-row justify-between items-center md:items-start mb-8 border-b-2 border-zinc-900 pb-4 gap-4 md:gap-0">
+                <header class="flex flex-col md:flex-row print:flex-row justify-between items-center md:items-start print:items-start mb-8 border-b-2 border-zinc-900 pb-4 gap-4 md:gap-0 print:gap-0">
                     <div>
                         <img src="./assets/Logo MG Paisajismo.png" alt="MG Paisajismo" class="h-20 md:h-24 object-contain">
                     </div>
-                    <div class="text-center md:text-right text-sm text-zinc-700 font-medium pt-2">
+                    <div class="text-center md:text-right print:text-right text-sm text-zinc-700 font-medium pt-2">
                         <p>Fonos 222142612 - 992225042</p>
                         <p>Camino del Valle Alto N° 1589, Las Condes</p>
                     </div>
                 </header>
 
-                <section class="mb-8 grid grid-cols-1 md:grid-cols-2 gap-4">
+                <section class="mb-8 grid grid-cols-1 md:grid-cols-2 print:grid-cols-2 gap-4">
                     <div class="space-y-3">
                         <div class="flex items-center gap-2 group print:block">
                             <span class="text-zinc-700 font-medium print:inline hidden" id="fecha-impresa">Santiago, </span>
@@ -252,7 +252,7 @@
 
                 <!-- Liquidación Final -->
                 <div class="flex justify-end mt-12 print:mt-6 print:break-inside-avoid">
-                    <div class="w-full md:w-1/2">
+                    <div class="w-full md:w-1/2 print:w-1/2">
                         <div class="flex justify-between py-2 border-b border-zinc-200">
                             <span class="font-bold">Costo Directo Total:</span>
                             <span id="lbl-costo-directo" class="font-bold text-lg">$0</span>

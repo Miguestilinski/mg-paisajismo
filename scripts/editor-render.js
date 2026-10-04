@@ -122,13 +122,18 @@ export function renderItemsHTML(pData, isEditMode) {
                 `;
             }).join('');
             
-            // Clean global category total
+            // Total general de la Categoría con el mismo estilo limpio del Subtotal
             bodyHtml += `
-                <div class="flex justify-end pr-1 mt-2">
-                    <div class="w-full sm:w-[40%] print:w-full border-t border-zinc-900 pt-3 flex justify-between">
-                        <span class="font-bold text-zinc-600">Total <span class="uppercase">${cat.titulo}</span>:</span>
-                        <span class="cat-subtotal font-bold text-zinc-900">$${formatCLP(cat.subtotal)}</span>
-                    </div>
+                <div class="overflow-x-auto -mx-5 px-5 sm:mx-0 sm:px-0 pb-2 print:overflow-visible print:mx-0 print:px-0 mt-2">
+                    <table class="w-full text-left table-fixed min-w-[650px] print:min-w-0 print:w-full">
+                        <tfoot>
+                            <tr class="border-t border-zinc-900">
+                                <td colspan="5" class="text-right py-3 pr-4 font-bold text-zinc-800">Total <span class="uppercase">${cat.titulo}</span>:</td>
+                                <td class="py-3 text-right font-bold text-zinc-900 cat-subtotal">$${formatCLP(cat.subtotal)}</td>
+                                <td class="w-28 pl-4 print:hidden ${isEditMode ? '' : 'hidden'}"></td>
+                            </tr>
+                        </tfoot>
+                    </table>
                 </div>
             `;
             botonesInferiores = `<button class="btn-add-subitem text-sm text-indigo-600 hover:text-indigo-900 font-bold print:hidden flex items-center gap-1 mt-4 bg-indigo-50 hover:bg-indigo-100 px-3 py-1.5 rounded transition-colors" data-cat="${catIndex}">+ Añadir Nuevo Subítem</button>`;

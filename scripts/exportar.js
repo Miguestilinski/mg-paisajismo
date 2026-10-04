@@ -60,35 +60,30 @@ export async function manejarExportacionPDF(pData, hayCambiosSinConfirmar, guard
 function prepararInputsParaImpresion() {
     const inputs = document.querySelectorAll('#hoja-presupuesto input[type="text"], #hoja-presupuesto textarea');
     inputs.forEach(input => {
-        // Skip hidden inputs
+        // Ignorar inputs que ya están ocultos (ej. placeholders nativos de Flatpickr)
         if (input.classList.contains('hidden')) return;
 
         let valor = input.value;
         const esVacio = valor.trim() === '';
         
-        // Si es el detalle (que tiene placeholder pero no valor), lo dejamos totalmente vacío
         if (esVacio && input.dataset.campo === 'detalle') valor = '';
-        // Si es cantidad o precio (numéricos) vacíos, dejamos vacío para que no salgan símbolos raros
         else if (esVacio && input.dataset.campo !== 'descripcion') valor = '';
-        // Para textos generales vacíos, un espacio duro mantiene la altura de línea
         else if (esVacio) valor = '&nbsp;';
 
-        const span = document.createElement(input.tagName.toLowerCase() === 'textarea' ? 'div' : 'div');
+        const span = document.createElement('div');
         
-        // Copiamos clases críticas de alineación y tipografía, omitiendo 'w-full' que rompe celdas de tabla
         const clasesParaCopiar = ['text-center', 'text-right', 'font-bold', 'text-sm', 'text-lg', 'font-semibold', 'pl-6'];
         const clasesBase = input.className.split(' ').filter(c => clasesParaCopiar.includes(c)).join(' ');
         
-        // Estilos específicos
-        let estilosExtra = '';
+        let estilosExtra = 'print:whitespace-normal print:break-words '; // Asegura que textos largos no se corten
+        
         if (input.tagName.toLowerCase() === 'textarea') {
-            estilosExtra = 'whitespace-pre-wrap word-break-normal pt-2';
+            estilosExtra += 'whitespace-pre-wrap word-break-normal pt-2';
             if (esVacio) estilosExtra += ' hidden'; 
         } else {
-            // Un div bloque asegura que la alineación (text-right) funcione igual que en el input
-            estilosExtra = 'block w-full px-1.5 py-0.5 text-zinc-900 truncate'; 
+            // Reemplazamos truncate por comportamiento normal
+            estilosExtra += 'block w-full px-1.5 py-0.5 text-zinc-900'; 
             
-            // Fix para los inputs de cantidad y precio (que tienen pl-6 por el signo $)
             if(input.dataset.campo === 'precioUnitario') {
                 estilosExtra = estilosExtra.replace('px-1.5', '');
             }
@@ -97,15 +92,15 @@ function prepararInputsParaImpresion() {
         span.className = `${clasesBase} ${estilosExtra} print-text-element`;
         span.innerHTML = valor;
         
-        // Ocultar input nativo, mostrar texto plano
-        input.classList.add('print:hidden');
+        // Etiquetar el input para saber cuál ocultamos nosotros y no romper otros print:hidden
+        input.classList.add('hide-for-print-swap', 'print:hidden');
         input.parentNode.insertBefore(span, input.nextSibling);
     });
 }
 
 function restaurarInputsPostImpresion() {
-    // Eliminar los spans de texto plano
     document.querySelectorAll('.print-text-element').forEach(el => el.remove());
-    // Restaurar los inputs
-    document.querySelectorAll('#hoja-presupuesto .print\\:hidden').forEach(el => el.classList.remove('print:hidden'));
+    document.querySelectorAll('.hide-for-print-swap').forEach(el => {
+        el.classList.remove('print:hidden', 'hide-for-print-swap');
+    });
 }
