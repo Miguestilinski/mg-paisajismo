@@ -232,13 +232,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     function indicarSincronizando() {
         semaforoUI.className = "flex items-center gap-2 px-3 py-1.5 bg-white/90 backdrop-blur-md rounded-full shadow-sm border border-blue-200 text-xs font-medium text-blue-600 transition-colors duration-300";
         semaforoDot.className = "w-2 h-2 rounded-full bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.6)] indicator-dot animate-pulse";
-        semaforoText.textContent = "Respaldando ☁️";
+        semaforoText.textContent = "Respaldando";
     }
 
     function indicarSincronizadoOK() {
         semaforoUI.className = "flex items-center gap-2 px-3 py-1.5 bg-white/90 backdrop-blur-md rounded-full shadow-sm border border-emerald-200 text-xs font-medium text-emerald-600 transition-colors duration-300";
         semaforoDot.className = "w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)] indicator-dot";
-        semaforoText.textContent = "Guardado en nube ☁️";
+        semaforoText.textContent = "Guardado en nube";
     }
 
     const manejadorSyncUI = (estado) => {
