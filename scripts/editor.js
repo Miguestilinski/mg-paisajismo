@@ -803,11 +803,15 @@ document.addEventListener('DOMContentLoaded', async () => {
                 // Actualiza totales UI de forma eficiente
                 const contenedorRaiz = tr.closest('[data-cat-index]');
                 if (subIndex !== undefined) {
-                    // Refresca el subtotal del subítem y el total de la categoría
-                    tr.closest(`[data-subitem-index="${subIndex}"]`).querySelector('.cat-subtotal').textContent = `$${formatCLP(pData.items[catIndex].subitems[subIndex].subtotal)}`;
-                    contenedorRaiz.querySelector(':scope > div > .cat-subtotal').textContent = `$${formatCLP(pData.items[catIndex].subtotal)}`;
+                    // Refresca el subtotal del subítem localmente
+                    tr.closest(`[data-subitem-index="${subIndex}"]`).querySelector('.subitem-subtotal-val').textContent = `$${formatCLP(pData.items[catIndex].subitems[subIndex].subtotal)}`;
+                    // Y luego refresca el total general de la categoría (modo compuesto)
+                    const totalGralElement = contenedorRaiz.querySelector('.cat-subtotal');
+                    if(totalGralElement) totalGralElement.textContent = `$${formatCLP(pData.items[catIndex].subtotal)}`;
                 } else {
-                    contenedorRaiz.querySelector('.cat-subtotal').textContent = `$${formatCLP(pData.items[catIndex].subtotal)}`;
+                    // Refresca el total general de la categoría (modo simple)
+                    const totalGralElement = contenedorRaiz.querySelector('.cat-subtotal');
+                    if(totalGralElement) totalGralElement.textContent = `$${formatCLP(pData.items[catIndex].subtotal)}`;
                 }
             }
             guardarSilencioso();
