@@ -126,7 +126,7 @@ function pedirClaveYLogear() {
 
 // Sincroniza los datos con Firebase usando Debounce (3 segundos)
 export function syncToCloud(pData, indicadorCallback) {
-    if (!auth.currentUser) return; // Freno de seguridad si está Offline
+    if (!auth.currentUser || !navigator.onLine) return; // Freno de seguridad si está sin sesión o sin internet
 
     clearTimeout(debounceTimer);
     
@@ -203,7 +203,7 @@ export function syncToCloud(pData, indicadorCallback) {
 
 // Rescata el documento más reciente si abrimos el sistema en otro computador
 export async function descargarDesdeNube(id) {
-    if (!auth.currentUser) return null;
+    if (!auth.currentUser || !navigator.onLine) return null;
     try {
         const dbRef = ref(db);
         const snapshot = await get(child(dbRef, `presupuestos/${id}`));
@@ -218,7 +218,7 @@ export async function descargarDesdeNube(id) {
 
 // Rescata TODOS los documentos (Para mantener sincronizada la página de inicio en todos los dispositivos)
 export async function descargarTodosDesdeNube() {
-    if (!auth.currentUser) return null;
+    if (!auth.currentUser || !navigator.onLine) return null;
     try {
         const dbRef = ref(db);
         const snapshot = await get(child(dbRef, `presupuestos`));
@@ -233,7 +233,7 @@ export async function descargarTodosDesdeNube() {
 
 // Elimina un proyecto completamente de la nube
 export async function borrarDeNube(id) {
-    if (!auth.currentUser) return;
+    if (!auth.currentUser || !navigator.onLine) return;
     try {
         await set(ref(db, `presupuestos/${id}`), null);
     } catch (error) {
